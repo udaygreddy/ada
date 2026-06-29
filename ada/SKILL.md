@@ -17,12 +17,17 @@ scan → review → package workflow and the non-negotiable rules.
 source authorization and document approval through `scripts/ledger.py`, and
 produce a local `ada_package/` folder that the client transmits to ADP.
 
+The per-client requirement list (the WHAT) comes from the ADP request **email**
+(Phase 0); the **taxonomy** is only a catalog of HOW/WHERE per document type.
+
 Key files:
-- [PROCEDURE.md](PROCEDURE.md) — the workflow you execute.
-- [taxonomy.yaml](taxonomy.yaml) — the documents in scope, mapped to system.
+- [PROCEDURE.md](PROCEDURE.md) — the workflow you execute (Phase 0 → A → B → C).
+- [connectors/mailbox.md](connectors/mailbox.md) — derive requirements from ADP emails (Gmail, read-only).
+- [connectors/salesforce_case.md](connectors/salesforce_case.md) — future requirement source.
+- [taxonomy.yaml](taxonomy.yaml) — master catalog: source + method + sensitivity per document type.
 - [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export checklist.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only tool allow-list.
-- `scripts/` — the hard controls (ledger, enumerate, pii_scan, package). Stdlib
-  Python; run with `python3 scripts/<name>.py`.
+- `scripts/` — the hard controls (ledger, requirements, enumerate, pii_scan,
+  package). Stdlib Python; run with `python3 scripts/<name>.py`.
 
 Start by reading PROCEDURE.md, then greet the operator and begin Phase A.
