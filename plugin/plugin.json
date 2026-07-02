@@ -1,0 +1,9 @@
+{
+  "name": "ada-discovery",
+  "version": "0.1.0",
+  "description": "ADA (ADP Discovery Agent): derive the documents ADP requested from the request email, then collect, review, and package them from the client's own systems (Paychex export, QuickBooks read-only) with code-enforced consent and a tamper-evident audit ledger.",
+  "author": {
+    "name": "Uday Gangireddy"
+  },
+  "keywords": ["adp", "payroll", "onboarding", "discovery", "paychex", "quickbooks"]
+}
