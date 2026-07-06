@@ -2,3 +2,10 @@
 __pycache__/
 *.pyc
 .venv/
+
+# generated plugin build artifacts
+build/
+*.plugin
+# ADA run workspace / output
+.ada/
+ada_package/
