@@ -2,11 +2,14 @@
 # Assemble the ADA distribution artifacts from the canonical skill bundle (ada/):
 #   - adp-discovery.plugin      (Cowork plugin package)
 #   - adp-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
-#   - .apm/skills/adp-discovery/  (committed apm mirror, refreshed from ada/)
-# The apm mirror lets `apm install udaygreddy/ada` serve the same skill. ada/ is
-# the single source you edit; run this script after editing ada/ to resync the
-# mirror (and commit it). If an outputs dir is given/found, the .plugin and zip
-# are copied there (the .plugin also shows as an installable Cowork card).
+#   - .apm/ mirror + `apm pack`  (apm packaging; .apm/ is generated, gitignored)
+# ada/ is the single source you edit. The .apm/ mirror is regenerated here (NOT
+# committed); `apm pack` then emits ecosystem plugin manifests from it. If an
+# outputs dir is given/found, the .plugin and zip are copied there (the .plugin
+# also shows as an installable Cowork card).
+#
+# Note: because .apm/ is not committed, `apm install udaygreddy/ada` from GitHub
+# is not available — apm here is a local build-time packaging step.
 #
 # Usage: ./build-plugin.sh [/path/to/cowork/outputs/dir]
 set -euo pipefail
@@ -72,6 +75,20 @@ mkdir -p "$SKILLSTAGE/$NAME"
 cp -R "$SKILL_DST/." "$SKILLSTAGE/$NAME/"
 ( cd "$SKILLSTAGE" && zip -rq "$SKILLZIP" "$NAME" -x "*.DS_Store" )
 echo "built $SKILLZIP"
+
+# --- apm packaging (optional; needs the apm CLI: pip install apm-cli) ---
+# Reads apm.yml + the generated .apm/ mirror and emits ecosystem plugin
+# manifests (Claude / Copilot). Outputs are gitignored build artifacts.
+APM_BIN="$(command -v apm || echo "$(python3 -m site --user-base 2>/dev/null)/bin/apm")"
+if [ -x "$APM_BIN" ]; then
+  if "$APM_BIN" pack >/tmp/apm-pack.log 2>&1; then
+    echo "apm pack: emitted plugin manifests (.claude-plugin/, .github/plugin/ — gitignored)"
+  else
+    echo "apm pack: skipped/failed (see /tmp/apm-pack.log)"
+  fi
+else
+  echo "apm not found; skipping apm pack (install: pip install apm-cli)"
+fi
 
 # --- deliver to outputs dir if provided or discoverable ---
 OUT="${1:-}"

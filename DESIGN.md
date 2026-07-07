@@ -164,10 +164,14 @@ ada/                       # canonical skill — the folder you edit
 ```
 
 **Packaging outputs (generated from `ada/` by `build-plugin.sh`):**
-`adp-discovery.plugin` (Cowork), `adp-discovery-skill.zip` (claude.ai / Claude
-Code), and `.apm/skills/adp-discovery/` — a **committed mirror** of `ada/` that
-lets `apm install udaygreddy/ada` serve the skill. Edit `ada/`; run
-`build-plugin.sh` to resync the mirror and rebuild the artifacts.
+`adp-discovery.plugin` (Cowork) and `adp-discovery-skill.zip` (claude.ai / Claude
+Code). The build also regenerates a `.apm/` mirror of `ada/` and runs `apm pack`
+to emit apm/plugin manifests — all **generated, gitignored** build artifacts, not
+committed. Edit `ada/`; run `build-plugin.sh` to rebuild everything.
+
+> Because `.apm/` is not committed, `apm install udaygreddy/ada` from GitHub is
+> not offered — apm here is a local build-time packaging step. To enable
+> install-from-GitHub later, commit the generated `.apm/` mirror.
 
 `SKILL.md` / `AGENTS.md` are ~10-line pointers to `PROCEDURE.md` + `scripts/` +
 the two `connectors/` specs. Everything else is shared and host-neutral.
