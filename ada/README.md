@@ -5,8 +5,7 @@ Codex, Cursor, Copilot) to discover, review, and package the onboarding document
 ADP needs — **without any ADP person accessing the client's systems**.
 
 Supported systems: **Paychex** and **Paylocity** (payroll — guided export) and
-**Intuit QuickBooks** (accounting/GL — read-only). Design docs:
-[../PLAYBOOK-v2.md](../PLAYBOOK-v2.md), [../DESIGN.md](../DESIGN.md).
+**Intuit QuickBooks** (accounting/GL — read-only).
 
 ## Two roles: requirements vs. taxonomy
 
@@ -36,7 +35,7 @@ don't depend on the model behaving:
   emits `manifest.json` + `gap_report.md`. Aborts if the ledger chain is broken.
 
 Everything is **stdlib-only Python 3** — no dependencies — so the code is fully
-client-reviewable (a legal requirement, PLAYBOOK §10/#1). The payroll provider is
+client-reviewable (a legal requirement). The payroll provider is
 pluggable: each provider (Paychex, Paylocity, …) is a connector doc supplying its
 own report navigation; adding one doesn't touch the pipeline.
 
@@ -87,5 +86,5 @@ Pipeline verified end-to-end on synthetic data, including: gate refuses
 un-approved files, ledger tamper detection, and content-hash binding (a file
 modified after approval is rejected). Paychex and Paylocity export navigation is
 sourced from ADP's onboarding guide. Not yet done: live QBO read-entity calls +
-OAuth scope confinement, and the secure handoff channel (PLAYBOOK §10/#2) —
-required before any real PII collection.
+OAuth scope confinement, and the secure handoff channel — required before any
+real PII collection.

@@ -10,7 +10,7 @@ pipeline as Paychex exports.
 Only the **read** tools below may be called. Never call any QBO tool whose name
 contains `create`, `update`, `delete`, `send`, `duplicate`, or `import`. This is
 a structural constraint, not a preference — QBO MCP exposes many write/delete
-tools that must remain unreachable (DESIGN §6).
+tools that must remain unreachable.
 
 | taxonomy id | QBO MCP read tool(s) | Materialize as |
 |---|---|---|

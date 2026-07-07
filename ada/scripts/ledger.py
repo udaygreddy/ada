@@ -2,7 +2,7 @@
 """
 ledger.py — append-only, hash-chained consent ledger for ADA.
 
-This is a HARD control (PLAYBOOK §3, §6). The agent cannot stage a document into
+This is a HARD control. The agent cannot stage a document into
 the handoff package unless a matching, unrevoked approval token exists here whose
 content_hash equals the file's current hash. Tampering with any prior entry
 breaks the chain, which `verify` detects.

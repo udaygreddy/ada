@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-package.py — assemble the handoff package (PLAYBOOK §3, §5 Phase C, §6).
+package.py — assemble the handoff package (PROCEDURE.md Phase C).
 
 The enforcement point. It stages a file ONLY if the ledger holds a valid,
 unrevoked approval token whose content_hash matches the file's current hash.
