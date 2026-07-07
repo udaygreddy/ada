@@ -90,7 +90,7 @@ tools, bundled scripts, or MCP. The procedure never names a vendor tool.
 | `PACKAGE.assemble` | Stage only ledger-approved files + emit manifest | `scripts/package.py` |
 | `ASK.confirm` | Get an explicit human decision | The host's normal chat turn |
 
-Source connectors are pluggable: the POC requires only `LOCAL`; each new system
+Source connectors are pluggable: the first slice required only `LOCAL`; each new system
 is one connector behind the `SOURCE.*` interface.
 
 ---
@@ -113,7 +113,7 @@ consumes it as `taxonomy.yaml`. Each item:
 
 `collection_tier` is the difficulty signal that drives scope:
 
-- **loose-file** 🟢 — sits in a drive/folder; find + classify. *(POC target.)*
+- **loose-file** 🟢 — sits in a drive/folder; find + classify. *(primary target.)*
 - **api-pull** 🟡 — structured data from an accounting/payroll system via connector.
 - **email** 🟡 — attachment search.
 - **portal** 🔴 — locked in an incumbent vendor's UI; needs browser automation.
@@ -219,7 +219,7 @@ ingest at handoff (§10/#1).
 - `pii_scan.py` looks for SSN, bank routing/account numbers, EIN, and similar.
   Matched files are `high` sensitivity: classified on **metadata only**, never
   auto-included, surfaced behind an explicit confirm in REVIEW.
-- POC does **not** auto-redact. Redaction is a later capability; for now the
+- ADA does **not** auto-redact. Redaction is a later capability; for now the
   human decides per document.
 - **Injection defense (§2.5):** content reads happen in a constrained step whose
   output the agent treats strictly as data for classification. The agent must
@@ -250,7 +250,7 @@ do **not** change per host; only the entry file and capability bindings (§3) do
 
 ---
 
-## 9. POC scope (v1)
+## 9. Initial scope (v1)
 
 - **Hosts:** agentic, code-capable, instruction-file hosts — Claude Code/Cowork
   (`SKILL.md`), Codex / Cursor / Copilot (`AGENTS.md`). ChatGPT chat is out of

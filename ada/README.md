@@ -1,12 +1,12 @@
-# ADA — ADP Discovery Agent (POC bundle)
+# ADA — ADP Discovery Agent
 
 A portable skill a client runs **inside their own AI assistant** (Claude Code,
 Codex, Cursor, Copilot) to discover, review, and package the onboarding documents
 ADP needs — **without any ADP person accessing the client's systems**.
 
-POC scope: ADP **SBS** clients on **Paychex** (payroll) + **Intuit QuickBooks**
-(GL/financial). Design docs: [../PLAYBOOK-v2.md](../PLAYBOOK-v2.md),
-[../POC-DESIGN.md](../POC-DESIGN.md).
+Supported systems: **Paychex** and **Paylocity** (payroll — guided export) and
+**Intuit QuickBooks** (accounting/GL — read-only). Design docs:
+[../PLAYBOOK-v2.md](../PLAYBOOK-v2.md), [../DESIGN.md](../DESIGN.md).
 
 ## Two roles: requirements vs. taxonomy
 
@@ -36,7 +36,9 @@ don't depend on the model behaving:
   emits `manifest.json` + `gap_report.md`. Aborts if the ledger chain is broken.
 
 Everything is **stdlib-only Python 3** — no dependencies — so the code is fully
-client-reviewable (a legal requirement, PLAYBOOK §10/#1).
+client-reviewable (a legal requirement, PLAYBOOK §10/#1). The payroll provider is
+pluggable: each provider (Paychex, Paylocity, …) is a connector doc supplying its
+own report navigation; adding one doesn't touch the pipeline.
 
 ## Layout
 
@@ -47,7 +49,8 @@ taxonomy.yaml             master catalog: source + method + sensitivity per type
 connectors/
   mailbox.md              derive requirements from ADP emails (Gmail, read-only)
   salesforce_case.md      future requirement source (Salesforce Case via MCP)
-  paychex_export.md       Paychex export checklist (guided ingest)
+  paychex_export.md       Paychex export navigation (guided ingest)
+  paylocity_export.md     Paylocity export navigation (guided ingest)
   intuit.md               QuickBooks read-only allow-list + tiered fallback
 scripts/                  hard controls (ledger/requirements/enumerate/pii_scan/package)
 ```
@@ -82,6 +85,7 @@ never transmits anything itself.**
 
 Pipeline verified end-to-end on synthetic data, including: gate refuses
 un-approved files, ledger tamper detection, and content-hash binding (a file
-modified after approval is rejected). Not yet done: live QBO read-entity calls +
-OAuth scope confinement, verified Paychex/QBO export report names, and the secure
-handoff channel (PLAYBOOK §10/#2) — required before any real PII collection.
+modified after approval is rejected). Paychex and Paylocity export navigation is
+sourced from ADP's onboarding guide. Not yet done: live QBO read-entity calls +
+OAuth scope confinement, and the secure handoff channel (PLAYBOOK §10/#2) —
+required before any real PII collection.

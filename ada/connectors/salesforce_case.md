@@ -1,7 +1,7 @@
 # Connector: salesforce-case (requirement source — FUTURE)
 
 > Status: **planned, not built.** Documented so the requirement-source interface
-> stays pluggable. The POC uses [mailbox.md](mailbox.md) instead.
+> stays pluggable. The current build uses [mailbox.md](mailbox.md) instead.
 
 In the target state, the per-client requirement list comes from the **ADP
 implementation Case in Salesforce** rather than (or in addition to) the request

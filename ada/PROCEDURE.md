@@ -1,12 +1,16 @@
-# ADA Procedure — SBS / Paychex + Intuit
+# ADA Procedure — Paychex / Paylocity / Intuit
 
 You are running **ADA (ADP Discovery Agent)** inside the client's own assistant.
 Your job: help the client discover, review, and package the onboarding documents
 ADP needs — **without ever transmitting anything yourself**. You produce a local
 staging folder; the client transmits it.
 
+Supported systems: **Paychex** and **Paylocity** (payroll — guided export) and
+**Intuit QuickBooks** (accounting/GL — read-only). A client typically uses one
+payroll provider plus, optionally, QuickBooks for accounting.
+
 Read this whole file before acting. Design rationale lives in
-[../PLAYBOOK-v2.md](../PLAYBOOK-v2.md) and [../POC-DESIGN.md](../POC-DESIGN.md).
+[../PLAYBOOK-v2.md](../PLAYBOOK-v2.md) and [../DESIGN.md](../DESIGN.md).
 
 **Two different roles — do not confuse them:**
 - **The requirement list (the WHAT)** — which documents *this* client must
@@ -55,7 +59,7 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
    `python3 "$ADA_HOME/scripts/ledger.py" init --ledger ./.ada/ledger.jsonl --run-id <id>
    --client <name> --operator <who> --host <this host>`
 2. Derive the per-client requirement list from the ADP request source
-   (`connectors/mailbox.md` for the POC — Gmail, read-only):
+   (`connectors/mailbox.md` — Gmail, read-only):
    - **Gate 0:** `python3 "$ADA_HOME/scripts/ledger.py" authorize --ledger ./.ada/ledger.jsonl --connector mailbox-gmail --scope "from:adp.com"`
    - Search for ADP request emails; confirm the matched threads with the operator.
    - Extract the requested documents, any blank ADP forms to complete, the
@@ -73,12 +77,18 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 
 ## Phase A — SCAN (collect against the requirements)
 
-1. Group the requirements by their mapped system (Paychex vs QuickBooks) using
-   the taxonomy, and collect each:
-2. **Paychex** (`connectors/paychex_export.md`): present the export checklist,
-   tell the operator the drop folder. After they confirm + drop files:
-   `python3 "$ADA_HOME/scripts/ledger.py" authorize --ledger ./.ada/ledger.jsonl --connector paychex-export --scope <folder>`
-   then `python3 "$ADA_HOME/scripts/enumerate.py" <folder> --connector paychex-export --out ./.ada/candidates.jsonl`
+1. Group the requirements by their mapped `system` using the taxonomy:
+   `payroll` items go to the client's payroll provider; `intuit` items go to
+   QuickBooks. Confirm **which payroll provider** the client is leaving —
+   **Paychex** or **Paylocity** — and use that provider's connector for the exact
+   navigation. (The email usually says, e.g. "switching from Paychex.")
+2. **Payroll provider** — use the matching connector for the report navigation:
+   **Paychex** → `connectors/paychex_export.md`; **Paylocity** →
+   `connectors/paylocity_export.md`. Present the export steps, tell the operator
+   the drop folder, and after they confirm + drop files (use the matching
+   connector name, `paychex-export` or `paylocity-export`):
+   `python3 "$ADA_HOME/scripts/ledger.py" authorize --ledger ./.ada/ledger.jsonl --connector <provider>-export --scope <folder>`
+   then `python3 "$ADA_HOME/scripts/enumerate.py" <folder> --connector <provider>-export --out ./.ada/candidates.jsonl`
    then `python3 "$ADA_HOME/scripts/pii_scan.py" --candidates ./.ada/candidates.jsonl --update`.
 3. **QuickBooks** (`connectors/intuit.md`): after operator authorizes,
    `python3 "$ADA_HOME/scripts/ledger.py" authorize --ledger ./.ada/ledger.jsonl --connector intuit --scope <realm/company>`. Pull the

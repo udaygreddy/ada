@@ -1,4 +1,4 @@
-# Connector: mailbox (requirement source — POC)
+# Connector: mailbox (requirement source — email)
 
 The per-client **requirement list** (the WHAT) is derived here, not from the
 taxonomy. ADA reads the client's mailbox, finds the ADP request emails, and
@@ -6,14 +6,14 @@ extracts the documents ADP asked *this* client to provide. Each extracted
 requirement is then mapped to a `taxonomy.yaml` id, and the taxonomy supplies the
 HOW/WHERE (system, method, sensitivity) for collection.
 
-> Requirement sources are pluggable. This mailbox connector is the POC source;
+> Requirement sources are pluggable. This mailbox connector is the current source;
 > [salesforce_case.md](salesforce_case.md) is the planned future source. Both feed
 > the same `ledger.py requirement` / `requirements.py add` records — only
 > `source_kind` differs (`email` vs `salesforce-case`).
 
 ## Provider
 
-- **POC:** Gmail via the connected MCP — **read tools only** (`search_threads`,
+- **Current:** Gmail via the connected MCP — **read tools only** (`search_threads`,
   `get_thread`). Never draft, send, label, or modify mail.
 - **Parallel (documented, not built):** Outlook / Microsoft Graph, same read-only
   shape.

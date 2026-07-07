@@ -7,9 +7,10 @@ description: >-
   the documents ADP requested", "we're switching payroll from Paychex to ADP",
   "collect our onboarding/migration documents for ADP", "check my email for
   ADP's document request", or "run the ADP discovery". Derives the required-
-  document list from the ADP request email (Phase 0), then collects from Paychex
-  (guided export) and Intuit QuickBooks (read-only), with code-enforced consent
-  and a hash-chained audit ledger.
+  document list from the ADP request email (Phase 0), then collects from the
+  client's payroll provider — Paychex or Paylocity (guided export) — and Intuit
+  QuickBooks (read-only accounting/GL), with code-enforced consent and a
+  hash-chained audit ledger.
 ---
 
 # ADA — ADP Discovery Agent
@@ -29,7 +30,8 @@ Key files:
 - [connectors/mailbox.md](connectors/mailbox.md) — derive requirements from ADP emails (Gmail, read-only).
 - [connectors/salesforce_case.md](connectors/salesforce_case.md) — future requirement source.
 - [taxonomy.yaml](taxonomy.yaml) — master catalog: source + method + sensitivity per document type.
-- [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export checklist.
+- [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export navigation.
+- [connectors/paylocity_export.md](connectors/paylocity_export.md) — Paylocity export navigation.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only tool allow-list.
 - `scripts/` — the hard controls (ledger, requirements, enumerate, pii_scan,
   package). Stdlib Python; run with `python3 scripts/<name>.py`.
