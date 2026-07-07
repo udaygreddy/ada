@@ -19,9 +19,11 @@ Depending on your tool, you'll use one of these (your ADP contact provides them)
 | Claude.ai (web chat) | `ada-discovery-skill.zip` |
 | Claude Code (terminal) | the `ada-discovery` folder (or the zip) |
 | GitHub Copilot (VS Code) | the `ada-discovery` folder |
+| Claude Code / Copilot / Cursor / Codex **via apm** | nothing — installs from GitHub (see §0) |
 
 > The `.zip`/folder and the `.plugin` contain the same skill — just packaged
-> differently for each tool.
+> differently for each tool. **If you use a coding assistant, §0 (apm) is the
+> quickest path** — one command, no files to download.
 
 ## One-time prerequisites
 
@@ -34,6 +36,33 @@ Depending on your tool, you'll use one of these (your ADP contact provides them)
 - A **mailbox connector** (Gmail or Outlook) so ADA can find the ADP request
   email. Optionally a **QuickBooks** connector if ADP asked for accounting data.
   (How to connect these is in each section below.)
+
+---
+
+## 0) Install with apm — Claude Code, Copilot, Cursor, Codex, and more
+
+[apm](https://microsoft.github.io/apm/) (Agent Package Manager) installs ADA into
+your project and wires it into whichever coding assistant you use — **one command,
+no files to download**. Best if you work in a code editor / terminal.
+
+### macOS & Windows
+
+1. Install the apm CLI (once):
+   - **macOS/Linux:** `pip install apm-cli`  *(or `brew`/native binary)*
+   - **Windows:** `pip install apm-cli`  *(or `scoop install apm`)*
+2. From the folder/project you'll work in, install ADA for your assistant:
+   ```sh
+   apm install udaygreddy/ada --target claude     # Claude Code
+   # or:  --target copilot   |   --target cursor   |   --target codex
+   ```
+   apm places the skill in the right spot for that tool automatically.
+3. Connect your **mailbox** (Gmail/Outlook) and optionally **QuickBooks** as MCP
+   servers in that tool (see the per-tool sections below for how), and make sure
+   **Python 3** is installed (see prerequisites above).
+4. In your assistant, type:
+   > *ADP asked us for documents — help me gather everything they requested.*
+
+> Don't have apm and prefer a manual install? Use the per-tool sections below.
 
 ---
 

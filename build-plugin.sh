@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Assemble the ADA distribution artifacts from the canonical ada/ skill bundle:
+# Assemble the ADA distribution artifacts from the canonical skill bundle
+# (.apm/skills/ada-discovery/):
 #   - ada-discovery.plugin      (Cowork plugin package)
 #   - ada-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
 # If an outputs dir is given/found, both are copied there (the .plugin also shows
@@ -12,12 +13,14 @@ REPO="$(cd "$(dirname "$0")" && pwd)"
 NAME="ada-discovery"
 BUILD="$REPO/build/$NAME"
 SKILL_DST="$BUILD/skills/$NAME"
+# Canonical skill source (apm-native location).
+SKILL_SRC="$REPO/.apm/skills/$NAME"
 
 rm -rf "$BUILD"
 mkdir -p "$SKILL_DST" "$BUILD/.claude-plugin"
 
 # Skill body = the canonical bundle (scripts/taxonomy/connectors/procedure/SKILL).
-cp -R "$REPO/ada/." "$SKILL_DST/"
+cp -R "$SKILL_SRC/." "$SKILL_DST/"
 # Drop cruft that shouldn't ship.
 find "$SKILL_DST" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 find "$SKILL_DST" -name '.DS_Store' -delete 2>/dev/null || true
