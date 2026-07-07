@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Assemble the ADA Cowork plugin from the canonical ada/ skill bundle.
-# Produces /tmp/ada-discovery.plugin and, if an outputs dir is given/found,
-# copies it there so it appears as an installable card in Cowork chat.
+# Assemble the ADA distribution artifacts from the canonical ada/ skill bundle:
+#   - ada-discovery.plugin      (Cowork plugin package)
+#   - ada-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
+# If an outputs dir is given/found, both are copied there (the .plugin also shows
+# up as an installable card in Cowork chat).
 #
 # Usage: ./build-plugin.sh [/path/to/cowork/outputs/dir]
 set -euo pipefail
@@ -45,6 +47,17 @@ rm -f "$PKG"
 ( cd "$BUILD" && zip -rq "$PKG" . -x "*.DS_Store" )
 echo "built $PKG"
 
+# --- skill-folder zip (claude.ai upload / Claude Code install) ---
+# Top-level folder is "$NAME/" with SKILL.md at its root.
+SKILLZIP="/tmp/$NAME-skill.zip"
+rm -f "$SKILLZIP"
+SKILLSTAGE="$REPO/build/skill"
+rm -rf "$SKILLSTAGE"
+mkdir -p "$SKILLSTAGE/$NAME"
+cp -R "$SKILL_DST/." "$SKILLSTAGE/$NAME/"
+( cd "$SKILLSTAGE" && zip -rq "$SKILLZIP" "$NAME" -x "*.DS_Store" )
+echo "built $SKILLZIP"
+
 # --- deliver to outputs dir if provided or discoverable ---
 OUT="${1:-}"
 if [ -z "$OUT" ]; then
@@ -52,7 +65,8 @@ if [ -z "$OUT" ]; then
 fi
 if [ -n "$OUT" ] && [ -d "$OUT" ]; then
   cp "$PKG" "$OUT/$NAME.plugin"
-  echo "delivered to $OUT/$NAME.plugin"
+  cp "$SKILLZIP" "$OUT/$NAME-skill.zip"
+  echo "delivered to $OUT/ ($NAME.plugin + $NAME-skill.zip)"
 else
-  echo "no outputs dir found; install $PKG manually or pass the outputs path"
+  echo "no outputs dir found; artifacts at $PKG and $SKILLZIP"
 fi
