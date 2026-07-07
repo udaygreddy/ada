@@ -6,8 +6,8 @@ QuickBooks** for accounting. Migration shape: payroll moves off the incumbent
 provider → ADP; QuickBooks stays and integrates for GL.
 
 The two payroll providers share the same **guided-export** pattern and differ
-only in report navigation (see `.apm/skills/adp-discovery/connectors/paychex_export.md`
-and `.../paylocity_export.md`). The sections below use Paychex as the
+only in report navigation (see `ada/connectors/paychex_export.md` and
+`ada/connectors/paylocity_export.md`). The sections below use Paychex as the
 worked example; Paylocity follows the same shape.
 
 ---
@@ -147,7 +147,7 @@ candidates appear.
 ## 5. Skill bundle
 
 ```
-.apm/skills/adp-discovery/   # canonical skill (apm-native location)
+ada/                       # canonical skill — the folder you edit
   SKILL.md                 # Claude entry
   AGENTS.md                # Codex / Cursor / Copilot entry
   PROCEDURE.md             # scan/review/package core (from PLAYBOOK §5)
@@ -162,6 +162,12 @@ candidates appear.
     ledger.py              # hash-chained ledger + approval tokens
     package.py             # stage approved-only; emit manifest + gap report
 ```
+
+**Packaging outputs (generated from `ada/` by `build-plugin.sh`):**
+`adp-discovery.plugin` (Cowork), `adp-discovery-skill.zip` (claude.ai / Claude
+Code), and `.apm/skills/adp-discovery/` — a **committed mirror** of `ada/` that
+lets `apm install udaygreddy/ada` serve the skill. Edit `ada/`; run
+`build-plugin.sh` to resync the mirror and rebuild the artifacts.
 
 `SKILL.md` / `AGENTS.md` are ~10-line pointers to `PROCEDURE.md` + `scripts/` +
 the two `connectors/` specs. Everything else is shared and host-neutral.

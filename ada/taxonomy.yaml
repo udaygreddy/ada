@@ -1,0 +1,171 @@
+# ADA taxonomy — document catalog (HOW/WHERE per document type).
+# Provider-agnostic: payroll document types use system "payroll"; the exact
+# per-provider report + navigation lives in the connector docs
+# (connectors/paychex_export.md, connectors/paylocity_export.md). Accounting/GL
+# types use system "intuit" (QuickBooks, read-only). Scalar-only schema (one
+# record per item); consumed by scripts/_ada.load_taxonomy.
+items:
+  # ---------- Payroll provider (Paychex | Paylocity | …) — guided export ----------
+  - id: 3a.employee_masterfile
+    section: "3. Payroll & Core Data"
+    label: "Employee Masterfile / Demographics / Job & comp"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: employee profiles / master data (SSN, pay, W-4)"
+    synonyms: "employee masterfile, census, demographics, roster, employee list, employee profile, master control"
+    sensitivity: high
+    tier: loose-file
+  - id: 3b.earnings_codes
+    section: "3. Payroll & Core Data"
+    label: "Earnings codes & setup"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: earnings / pay-type setup"
+    synonyms: "earnings codes, pay types, earnings setup"
+    sensitivity: low
+    tier: loose-file
+  - id: 3b.deduction_codes
+    section: "3. Payroll & Core Data"
+    label: "Deduction codes & setup"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: deduction setup"
+    synonyms: "deduction codes, deductions setup"
+    sensitivity: low
+    tier: loose-file
+  - id: 3b.tax_setup
+    section: "3. Payroll & Core Data"
+    label: "Tax setup (federal/state/local)"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: tax IDs (printed on the quarterly filing packet)"
+    synonyms: "tax setup, tax configuration, sui rate, sit"
+    sensitivity: medium
+    tier: loose-file
+  - id: 3c.ytd_balances
+    section: "3. Payroll & Core Data"
+    label: "Year-to-date (YTD) balances"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: YTD payroll totals (Jan 1 -> last check date)"
+    synonyms: "ytd, year to date, ytd balances, employee earnings record, register with ytd"
+    sensitivity: high
+    tier: loose-file
+  - id: 3c.payroll_register
+    section: "3. Payroll & Core Data"
+    label: "Payroll registers (by check date)"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: payroll register / journal (current quarter, by check date)"
+    synonyms: "payroll register, payroll journal, register summary, paycheck history"
+    sensitivity: high
+    tier: loose-file
+  - id: 3c.payroll_summary
+    section: "3. Payroll & Core Data"
+    label: "Payroll summary reports"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: consolidated payroll summary (prior + current quarter)"
+    synonyms: "payroll summary, employee earnings record, consolidated payroll, labor distribution"
+    sensitivity: medium
+    tier: loose-file
+  - id: 3d.paystubs
+    section: "3. Payroll & Core Data"
+    label: "Paystubs (sample)"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: sample paystubs"
+    synonyms: "paystub, pay stub, pay statement"
+    sensitivity: high
+    tier: loose-file
+  - id: 3d.w2s
+    section: "3. Payroll & Core Data"
+    label: "W-2s (prior year)"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: prior-year W-2s"
+    synonyms: "w-2, w2, wage and tax statement"
+    sensitivity: high
+    tier: loose-file
+  - id: 4a.tax_returns
+    section: "4. Tax & Compliance"
+    label: "Prior quarter tax returns (941/940/SUI/SIT)"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: most recent quarterly filing packet (941/940/SUI/SIT)"
+    synonyms: "941, 940, sui, sit, tax return, quarterly filing packet, quarterly filings"
+    sensitivity: medium
+    tier: loose-file
+  - id: 4a.tax_deposits
+    section: "4. Tax & Compliance"
+    label: "Proof of tax deposits"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: tax deposit report / statement of filings and deposits"
+    synonyms: "tax deposit, liability report, deposit proof, cash requirements, statement of deposits"
+    sensitivity: medium
+    tier: loose-file
+  - id: 6.time_off_accruals
+    section: "6. Time & Attendance"
+    label: "Time off accruals / PTO balances"
+    system: payroll
+    method: guided-export
+    source_hint: "Payroll provider: PTO / time-off accrual balances"
+    synonyms: "pto, time off, accruals, vacation, sick balances"
+    sensitivity: medium
+    tier: loose-file
+  - id: 2.bank_proof
+    section: "2. Financial & Client Verification"
+    label: "Bank proof (voided check / bank statement)"
+    system: payroll
+    method: upload
+    source_hint: "Voided check or bank statement from the bank (operator upload)"
+    synonyms: "bank proof, voided check, bank statement, direct debit account"
+    sensitivity: high
+    tier: loose-file
+  # ---------- Intuit / QuickBooks (accounting/GL — read-only, tiered) ----------
+  - id: 2.company_verification
+    section: "2. Financial & Client Verification"
+    label: "Company / EIN verification"
+    system: intuit
+    method: mcp-pull
+    source_hint: "QBO: company_info"
+    synonyms: "company info, ein, legal name, address"
+    sensitivity: medium
+    tier: api-pull
+  - id: 2.financial_verification
+    section: "2. Financial & Client Verification"
+    label: "Financial verification (P&L, balance sheet)"
+    system: intuit
+    method: mcp-pull
+    source_hint: "QBO: balance_sheet, profit_and_loss"
+    synonyms: "balance sheet, profit and loss, p&l, financials"
+    sensitivity: medium
+    tier: api-pull
+  - id: 5a.chart_of_accounts
+    section: "5. General Ledger (GL)"
+    label: "Chart of accounts"
+    system: intuit
+    method: tiered-api-or-export
+    source_hint: "QBO: Account entity (read API) OR guided QBO export"
+    synonyms: "chart of accounts, coa, gl accounts"
+    sensitivity: low
+    tier: api-pull
+  - id: 5a.journal_entries
+    section: "5. General Ledger (GL)"
+    label: "Recent journal entries / payroll journal"
+    system: intuit
+    method: tiered-api-or-export
+    source_hint: "QBO: JournalEntry entity (read API) OR guided QBO export"
+    synonyms: "journal entries, gl detail, general ledger detail"
+    sensitivity: low
+    tier: api-pull
+  - id: 5b.accounting_metadata
+    section: "5. General Ledger (GL)"
+    label: "Accounting software name / calendar"
+    system: intuit
+    method: mcp-pull
+    source_hint: "QBO: company_info metadata"
+    synonyms: "accounting software, fiscal calendar, accounting calendar"
+    sensitivity: low
+    tier: api-pull

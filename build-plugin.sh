@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Assemble the ADA distribution artifacts from the canonical skill bundle
-# (.apm/skills/adp-discovery/):
+# Assemble the ADA distribution artifacts from the canonical skill bundle (ada/):
 #   - adp-discovery.plugin      (Cowork plugin package)
 #   - adp-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
-# If an outputs dir is given/found, both are copied there (the .plugin also shows
-# up as an installable card in Cowork chat).
+#   - .apm/skills/adp-discovery/  (committed apm mirror, refreshed from ada/)
+# The apm mirror lets `apm install udaygreddy/ada` serve the same skill. ada/ is
+# the single source you edit; run this script after editing ada/ to resync the
+# mirror (and commit it). If an outputs dir is given/found, the .plugin and zip
+# are copied there (the .plugin also shows as an installable Cowork card).
 #
 # Usage: ./build-plugin.sh [/path/to/cowork/outputs/dir]
 set -euo pipefail
@@ -13,8 +15,18 @@ REPO="$(cd "$(dirname "$0")" && pwd)"
 NAME="adp-discovery"
 BUILD="$REPO/build/$NAME"
 SKILL_DST="$BUILD/skills/$NAME"
-# Canonical skill source (apm-native location).
-SKILL_SRC="$REPO/.apm/skills/$NAME"
+# Canonical skill source (the folder you edit).
+SKILL_SRC="$REPO/ada"
+# apm reads primitives from .apm/ only — keep a committed mirror there.
+APM_MIRROR="$REPO/.apm/skills/$NAME"
+
+# --- resync the apm mirror from the canonical source ---
+rm -rf "$APM_MIRROR"
+mkdir -p "$(dirname "$APM_MIRROR")"
+cp -R "$SKILL_SRC" "$APM_MIRROR"
+find "$APM_MIRROR" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+find "$APM_MIRROR" -name '.DS_Store' -delete 2>/dev/null || true
+echo "synced apm mirror .apm/skills/$NAME (from ada/) — commit it if changed"
 
 rm -rf "$BUILD"
 mkdir -p "$SKILL_DST" "$BUILD/.claude-plugin"
