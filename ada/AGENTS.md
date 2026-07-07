@@ -16,7 +16,8 @@ Map of the bundle:
 - [connectors/mailbox.md](connectors/mailbox.md) — derive requirements from ADP emails (Gmail, read-only).
 - [connectors/salesforce_case.md](connectors/salesforce_case.md) — future requirement source.
 - [taxonomy.yaml](taxonomy.yaml) — master catalog: source + method + sensitivity per document type.
-- [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export checklist.
+- [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export navigation.
+- [connectors/paylocity_export.md](connectors/paylocity_export.md) — Paylocity export navigation.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only allow-list.
 - `scripts/` — hard controls (ledger, requirements, enumerate, pii_scan,
   package). Stdlib Python 3; run with `python3 scripts/<name>.py`. No deps.

@@ -3,9 +3,10 @@
 ADA (ADP Discovery Agent) helps a client gather the onboarding documents ADP
 requested, from the client's **own** systems — so no ADP person accesses those
 systems. It derives the required-document list from the ADP request email, then
-collects from Paychex (guided export) and Intuit QuickBooks (read-only), staging
-a package the client transmits to ADP. Consent is enforced in code and every
-action is recorded in a hash-chained, tamper-evident ledger.
+collects from the client's payroll provider — Paychex or Paylocity (guided
+export) — and Intuit QuickBooks (read-only accounting/GL), staging a package the
+client transmits to ADP. Consent is enforced in code and every action is
+recorded in a hash-chained, tamper-evident ledger.
 
 ## Install
 
@@ -16,7 +17,7 @@ Accept the `ada-discovery.plugin` card in chat.
 - **Gmail connector** connected in Cowork — used read-only in Phase 0 to find the
   ADP request email and derive the requirement list.
 - *(Optional)* **QuickBooks (QBO)** connector — for read-only GL/financial pulls.
-- Paychex needs no connector (the skill guides a manual export).
+- Paychex / Paylocity need no connector (the skill guides a manual export).
 - `python3` on the machine (bundled scripts are stdlib-only; nothing to install).
 
 ## Try it

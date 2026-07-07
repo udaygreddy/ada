@@ -9,3 +9,5 @@ build/
 # ADA run workspace / output
 .ada/
 ada_package/
+# ADP-internal source docs (kept local, not versioned)
+spara.md

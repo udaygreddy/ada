@@ -1,9 +1,14 @@
-# ADA POC — Skill Design: SBS / Paychex + Intuit
+# ADA — Skill Design: Paychex / Paylocity / Intuit
 
-Concrete instantiation of [PLAYBOOK-v2.md](PLAYBOOK-v2.md) for the first POC:
-ADP **SBS** (Small Business Services) clients, who predominantly run **Paychex**
-(payroll) and **Intuit QuickBooks** (accounting). Migration shape: payroll moves
-Paychex → ADP; QuickBooks stays and integrates for GL.
+Concrete instantiation of [PLAYBOOK-v2.md](PLAYBOOK-v2.md). Target clients run a
+payroll provider — **Paychex** or **Paylocity** — plus, optionally, **Intuit
+QuickBooks** for accounting. Migration shape: payroll moves off the incumbent
+provider → ADP; QuickBooks stays and integrates for GL.
+
+The two payroll providers share the same **guided-export** pattern and differ
+only in report navigation (see `ada/connectors/paychex_export.md` and
+`ada/connectors/paylocity_export.md`). The sections below use Paychex as the
+worked example; Paylocity follows the same shape.
 
 ---
 
@@ -18,16 +23,18 @@ Paychex → ADP; QuickBooks stays and integrates for GL.
 | Collection tier | `api-pull` 🟡 | `loose-file` 🟢 (after operator export) |
 | Sensitivity | medium (financials) | **high** (W-2s, paystubs, SSNs) |
 
-This split keeps the POC honest: QuickBooks proves the structured-pull path,
-Paychex proves the file-ingest path. Between them they cover the bulk of an SBS
-onboarding without touching incumbent-portal scraping or form generation.
+This split keeps the design honest: QuickBooks proves the structured-pull path,
+the payroll providers prove the file-ingest path. Between them they cover the
+bulk of a small-business onboarding without incumbent-portal scraping or form
+generation.
 
 ---
 
-## 2. In-scope taxonomy for the POC
+## 2. In-scope taxonomy
 
 Subset of [documentstocollect.md](documentstocollect.md), mapped to system +
-method. Items not listed here are out of POC scope.
+method. Payroll items are provider-agnostic (`system: payroll`); the exact report
+per provider lives in the connector docs.
 
 ### From Paychex (guided export ingest)
 
@@ -66,9 +73,9 @@ method. Items not listed here are out of POC scope.
 > the item as a gap. The connector picks tier 1 automatically and asks at tier 2.
 > See §3 and §6.
 
-> **Note:** the QBO MCP also exposes *payroll* tools, but SBS clients on Paychex
-> typically have **no QBO Payroll**, so those return empty. Payroll comes from
-> Paychex, not QBO. Do not pull QBO payroll for this POC.
+> **Note:** the QBO MCP also exposes *payroll* tools, but small-business clients
+> on Paychex/Paylocity typically have **no QBO Payroll**, so those return empty.
+> Payroll comes from the payroll provider, not QBO. Do not pull QBO payroll.
 
 ---
 
@@ -137,7 +144,7 @@ candidates appear.
 
 ---
 
-## 5. Skill bundle for the POC
+## 5. Skill bundle
 
 ```
 ada/
@@ -160,7 +167,7 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
 
 ---
 
-## 6. POC-specific open items (added to PLAYBOOK §10)
+## 6. Open items (added to PLAYBOOK §10)
 
 - **QBO Chart-of-Accounts / GL detail — tiered fallback (resolved approach).**
   MCP lacks COA/journal endpoints, so ADA uses the §3 ladder: MCP where
@@ -168,23 +175,23 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
   guided QBO export → gap. Remaining build work: implement the read-only QBO
   entity calls + OAuth read-scope confinement, and write the QBO export checklist
   (exact report names) — both need verification against a real QBO tenant.
-- **Paychex export checklist accuracy.** The exact Paychex Flex report names /
-  navigation must be verified against a real Paychex tenant; the table in §2 is a
-  first draft of intent, not confirmed UI labels.
-- **High-PII concentration.** Paychex side is almost entirely high-sensitivity
-  (W-2s, paystubs, census). The secure-handoff channel (PLAYBOOK §10/#2) is
-  therefore on the critical path for this POC specifically, not deferrable.
+- **Export navigation source.** Paychex and Paylocity report navigation is taken
+  from ADP's onboarding guide (`connectors/*_export.md`); keep it in sync if ADP
+  updates its report names/paths.
+- **High-PII concentration.** The payroll side is almost entirely high-sensitivity
+  (W-2s, paystubs, registers, census). The secure-handoff channel (PLAYBOOK
+  §10/#2) is therefore on the critical path, not deferrable.
 - **Read-only enforcement for QBO.** Must be a hard allow-list in the `intuit`
   connector, not a prose instruction — the QBO MCP exposes many write/delete
   tools that must be structurally unreachable.
 
 ---
 
-## 7. Definition of done (POC)
+## 7. Definition of done
 
-Running ADA for a sample SBS client:
+Running ADA for a sample small-business client:
 1. Pulls QuickBooks company + financial artifacts read-only and materializes them.
-2. Guides a Paychex export and ingests + classifies the dropped files.
+2. Guides a Paychex or Paylocity export and ingests + classifies the dropped files.
 3. Flags every W-2/paystub/register as sensitive and holds for explicit review.
 4. Produces a staging folder where **every file traces to a ledger approval
    token**, plus `manifest.json`, a gap report (incl. the COA gap), and a

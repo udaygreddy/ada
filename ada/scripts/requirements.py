@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 requirements.py — record the per-client requirement list (the WHAT for this
-client), derived from an ADP request source: the request email (POC) or, in
+client), derived from an ADP request source: the request email (today) or, in
 future, a Salesforce Case via MCP (PROCEDURE Phase 0).
 
 The requirement list comes from the source. The taxonomy is only consulted

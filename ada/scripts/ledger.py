@@ -119,7 +119,7 @@ def record_requirement(path, req_id, requested_text, source_kind="email",
     an ADP request source. The requirement list comes from the source; the
     taxonomy only supplies HOW/WHERE once `mapped_taxonomy_id` is set.
 
-    source_kind: email (POC) | salesforce-case (future MCP) | manual
+    source_kind: email (default) | salesforce-case (future MCP) | manual
     source_ref:  email thread id / Salesforce case id
     kind:        collect (gather a file) | complete (fill a blank ADP form)
     Provenance is kept inside the tamper-evident ledger."""
