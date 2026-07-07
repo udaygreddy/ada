@@ -2,7 +2,7 @@
 """
 enumerate.py — list + hash candidate documents from a source folder.
 
-Deterministic discovery step (PLAYBOOK §3, §5 Phase A). Walks a drop folder
+Deterministic discovery step (PROCEDURE.md Phase A). Walks a drop folder
 (e.g. a Paychex export folder, or materialized QuickBooks pulls), hashes each
 file, and emits one JSON candidate per line. It does NOT classify — classification
 is the agent's judgment; this script only produces the verifiable candidate set.

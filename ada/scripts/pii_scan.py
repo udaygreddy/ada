@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pii_scan.py — local sensitivity flagging (PLAYBOOK §3, §7).
+pii_scan.py — local sensitivity flagging (PROCEDURE.md Phase A).
 
 Runs as CODE, not via the LLM: document content is read here and matched with
 regex, so PII never has to be sent to the model to decide sensitivity. For

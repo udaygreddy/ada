@@ -1,6 +1,6 @@
 """
 Shared helpers for ADA scripts. Standard library only (no third-party deps),
-so the bundle is fully client-reviewable and auditable (PLAYBOOK §10/#1).
+so the bundle is fully client-reviewable and auditable.
 """
 import datetime
 import hashlib
