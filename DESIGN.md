@@ -6,7 +6,7 @@ QuickBooks** for accounting. Migration shape: payroll moves off the incumbent
 provider → ADP; QuickBooks stays and integrates for GL.
 
 The two payroll providers share the same **guided-export** pattern and differ
-only in report navigation (see `.apm/skills/ada-discovery/connectors/paychex_export.md`
+only in report navigation (see `.apm/skills/adp-discovery/connectors/paychex_export.md`
 and `.../paylocity_export.md`). The sections below use Paychex as the
 worked example; Paylocity follows the same shape.
 
@@ -147,7 +147,7 @@ candidates appear.
 ## 5. Skill bundle
 
 ```
-.apm/skills/ada-discovery/   # canonical skill (apm-native location)
+.apm/skills/adp-discovery/   # canonical skill (apm-native location)
   SKILL.md                 # Claude entry
   AGENTS.md                # Codex / Cursor / Copilot entry
   PROCEDURE.md             # scan/review/package core (from PLAYBOOK §5)

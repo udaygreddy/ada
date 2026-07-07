@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Assemble the ADA distribution artifacts from the canonical skill bundle
-# (.apm/skills/ada-discovery/):
-#   - ada-discovery.plugin      (Cowork plugin package)
-#   - ada-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
+# (.apm/skills/adp-discovery/):
+#   - adp-discovery.plugin      (Cowork plugin package)
+#   - adp-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
 # If an outputs dir is given/found, both are copied there (the .plugin also shows
 # up as an installable card in Cowork chat).
 #
@@ -10,7 +10,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
-NAME="ada-discovery"
+NAME="adp-discovery"
 BUILD="$REPO/build/$NAME"
 SKILL_DST="$BUILD/skills/$NAME"
 # Canonical skill source (apm-native location).

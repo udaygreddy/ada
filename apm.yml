@@ -1,7 +1,7 @@
 # APM (Agent Package Manager) manifest — https://microsoft.github.io/apm/
 # Publishing: this repo IS the package. Push to the git remote; consumers run
 #   apm install udaygreddy/ada --target claude   (or copilot, cursor, codex, …)
-name: ada-discovery
+name: adp-discovery
 version: 0.1.0
 description: >-
   Use when a client needs to collect the onboarding documents ADP requested,

@@ -1,5 +1,5 @@
 ---
-name: ada-discovery
+name: adp-discovery
 description: >-
   Use when a client needs to gather the onboarding documents ADP requested, from
   their own systems, without ADP accessing them — e.g. they say "ADP asked us for

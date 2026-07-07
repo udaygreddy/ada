@@ -10,7 +10,7 @@ recorded in a hash-chained, tamper-evident ledger.
 
 ## Install
 
-Accept the `ada-discovery.plugin` card in chat.
+Accept the `adp-discovery.plugin` card in chat.
 
 ## Prerequisites
 
