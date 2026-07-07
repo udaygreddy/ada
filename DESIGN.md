@@ -147,7 +147,7 @@ candidates appear.
 ## 5. Skill bundle
 
 ```
-ada/
+ada/                       # canonical skill — the folder you edit
   SKILL.md                 # Claude entry
   AGENTS.md                # Codex / Cursor / Copilot entry
   PROCEDURE.md             # scan/review/package core (from PLAYBOOK §5)
@@ -155,12 +155,23 @@ ada/
   connectors/
     intuit.md              # read-tool allow-list + materialization rules
     paychex_export.md      # the operator export checklist + drop-folder spec
+    paylocity_export.md    # Paylocity export navigation
   scripts/
     enumerate.py           # list + hash + pre-filter (Paychex folder; QBO outputs)
     pii_scan.py            # SSN / routing / account / EIN flagging
     ledger.py              # hash-chained ledger + approval tokens
     package.py             # stage approved-only; emit manifest + gap report
 ```
+
+**Packaging outputs (generated from `ada/` by `build-plugin.sh`):**
+`adp-discovery.plugin` (Cowork) and `adp-discovery-skill.zip` (claude.ai / Claude
+Code). The build also regenerates a `.apm/` mirror of `ada/` and runs `apm pack`
+to emit apm/plugin manifests — all **generated, gitignored** build artifacts, not
+committed. Edit `ada/`; run `build-plugin.sh` to rebuild everything.
+
+> Because `.apm/` is not committed, `apm install udaygreddy/ada` from GitHub is
+> not offered — apm here is a local build-time packaging step. To enable
+> install-from-GitHub later, commit the generated `.apm/` mirror.
 
 `SKILL.md` / `AGENTS.md` are ~10-line pointers to `PROCEDURE.md` + `scripts/` +
 the two `connectors/` specs. Everything else is shared and host-neutral.

@@ -1,16 +1,14 @@
 ---
-name: ada-discovery
+name: adp-discovery
 description: >-
-  ADA (ADP Discovery Agent) — discover, review, and package the onboarding
-  documents ADP requested, from the client's own systems, without ADP accessing
-  them. Use when the user says things like "ADP asked us for documents", "gather
-  the documents ADP requested", "we're switching payroll from Paychex to ADP",
-  "collect our onboarding/migration documents for ADP", "check my email for
-  ADP's document request", or "run the ADP discovery". Derives the required-
-  document list from the ADP request email (Phase 0), then collects from the
-  client's payroll provider — Paychex or Paylocity (guided export) — and Intuit
-  QuickBooks (read-only accounting/GL), with code-enforced consent and a
-  hash-chained audit ledger.
+  Use when a client needs to gather the onboarding documents ADP requested, from
+  their own systems, without ADP accessing them — e.g. they say "ADP asked us for
+  documents", "gather the documents ADP requested", "we're switching payroll from
+  Paychex/Paylocity to ADP", "check my email for ADP's document request", or "run
+  the ADP discovery". ADA (ADP Discovery Agent) derives the required-document list
+  from the ADP request email, then collects from the client's payroll provider
+  (Paychex or Paylocity, guided export) and Intuit QuickBooks (read-only
+  accounting/GL), with code-enforced consent and a hash-chained audit ledger.
 ---
 
 # ADA — ADP Discovery Agent

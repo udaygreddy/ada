@@ -1,0 +1,22 @@
+# APM (Agent Package Manager) manifest — https://microsoft.github.io/apm/
+# Publishing: this repo IS the package. Push to the git remote; consumers run
+#   apm install udaygreddy/ada --target claude   (or copilot, cursor, codex, …)
+name: adp-discovery
+version: 0.1.0
+description: >-
+  Use when a client needs to collect the onboarding documents ADP requested,
+  from their own systems, without ADP accessing them: derives the required-
+  document list from the ADP request email, then collects from the payroll
+  provider (Paychex or Paylocity) and Intuit QuickBooks, with code-enforced
+  consent and a tamper-evident audit ledger.
+author: Uday Gangireddy
+license: UNLICENSED          # proprietary/internal ADP tool; change if open-sourced
+type: skill
+includes: auto
+targets:
+  - claude
+  - copilot
+
+# ADA uses the CLIENT's own connectors (Gmail/Outlook for the request email,
+# QuickBooks for GL). These are a documented prerequisite, intentionally NOT
+# pinned here so the package doesn't force a specific MCP server. See INSTALL.md.

@@ -11,3 +11,12 @@ build/
 ada_package/
 # ADP-internal source docs (kept local, not versioned)
 spara.md
+# apm build artifacts — .apm/ is generated from ada/ by build-plugin.sh (not
+# committed); the rest are emitted by `apm pack` / `apm compile`.
+.apm/
+.claude-plugin/
+.claude/
+.github/plugin/
+apm_modules/
+.apm-pin
+apm.lock.yaml

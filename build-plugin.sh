@@ -1,23 +1,41 @@
 #!/usr/bin/env bash
-# Assemble the ADA distribution artifacts from the canonical ada/ skill bundle:
-#   - ada-discovery.plugin      (Cowork plugin package)
-#   - ada-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
-# If an outputs dir is given/found, both are copied there (the .plugin also shows
-# up as an installable card in Cowork chat).
+# Assemble the ADA distribution artifacts from the canonical skill bundle (ada/):
+#   - adp-discovery.plugin      (Cowork plugin package)
+#   - adp-discovery-skill.zip   (skill folder — claude.ai upload / Claude Code install)
+#   - .apm/ mirror + `apm pack`  (apm packaging; .apm/ is generated, gitignored)
+# ada/ is the single source you edit. The .apm/ mirror is regenerated here (NOT
+# committed); `apm pack` then emits ecosystem plugin manifests from it. If an
+# outputs dir is given/found, the .plugin and zip are copied there (the .plugin
+# also shows as an installable Cowork card).
+#
+# Note: because .apm/ is not committed, `apm install udaygreddy/ada` from GitHub
+# is not available — apm here is a local build-time packaging step.
 #
 # Usage: ./build-plugin.sh [/path/to/cowork/outputs/dir]
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
-NAME="ada-discovery"
+NAME="adp-discovery"
 BUILD="$REPO/build/$NAME"
 SKILL_DST="$BUILD/skills/$NAME"
+# Canonical skill source (the folder you edit).
+SKILL_SRC="$REPO/ada"
+# apm reads primitives from .apm/ only — keep a committed mirror there.
+APM_MIRROR="$REPO/.apm/skills/$NAME"
+
+# --- resync the apm mirror from the canonical source ---
+rm -rf "$APM_MIRROR"
+mkdir -p "$(dirname "$APM_MIRROR")"
+cp -R "$SKILL_SRC" "$APM_MIRROR"
+find "$APM_MIRROR" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+find "$APM_MIRROR" -name '.DS_Store' -delete 2>/dev/null || true
+echo "synced apm mirror .apm/skills/$NAME (from ada/) — commit it if changed"
 
 rm -rf "$BUILD"
 mkdir -p "$SKILL_DST" "$BUILD/.claude-plugin"
 
 # Skill body = the canonical bundle (scripts/taxonomy/connectors/procedure/SKILL).
-cp -R "$REPO/ada/." "$SKILL_DST/"
+cp -R "$SKILL_SRC/." "$SKILL_DST/"
 # Drop cruft that shouldn't ship.
 find "$SKILL_DST" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 find "$SKILL_DST" -name '.DS_Store' -delete 2>/dev/null || true
@@ -57,6 +75,20 @@ mkdir -p "$SKILLSTAGE/$NAME"
 cp -R "$SKILL_DST/." "$SKILLSTAGE/$NAME/"
 ( cd "$SKILLSTAGE" && zip -rq "$SKILLZIP" "$NAME" -x "*.DS_Store" )
 echo "built $SKILLZIP"
+
+# --- apm packaging (optional; needs the apm CLI: pip install apm-cli) ---
+# Reads apm.yml + the generated .apm/ mirror and emits ecosystem plugin
+# manifests (Claude / Copilot). Outputs are gitignored build artifacts.
+APM_BIN="$(command -v apm || echo "$(python3 -m site --user-base 2>/dev/null)/bin/apm")"
+if [ -x "$APM_BIN" ]; then
+  if "$APM_BIN" pack >/tmp/apm-pack.log 2>&1; then
+    echo "apm pack: emitted plugin manifests (.claude-plugin/, .github/plugin/ — gitignored)"
+  else
+    echo "apm pack: skipped/failed (see /tmp/apm-pack.log)"
+  fi
+else
+  echo "apm not found; skipping apm pack (install: pip install apm-cli)"
+fi
 
 # --- deliver to outputs dir if provided or discoverable ---
 OUT="${1:-}"
