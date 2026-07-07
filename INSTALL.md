@@ -15,7 +15,7 @@ Depending on your tool, you'll use one of these (your ADP contact provides them)
 
 | Tool | File you need |
 |---|---|
-| Claude Cowork (desktop app) | `adp-discovery.plugin` |
+| Claude Desktop app (Mac/Windows) | `adp-discovery-skill.zip` (Skill) — or `adp-discovery.plugin` (Cowork) |
 | Claude.ai (web chat) | `adp-discovery-skill.zip` |
 | Claude Code (terminal) | the `adp-discovery` folder (or the zip) |
 | GitHub Copilot (VS Code) | the `adp-discovery` folder |
@@ -66,21 +66,40 @@ no files to download**. Best if you work in a code editor / terminal.
 
 ---
 
-## 1) Claude Cowork (desktop app) — easiest
+## 1) Claude Desktop app (Mac & Windows) — Chat, Cowork, or Code
 
-### macOS & Windows (same steps)
+The Claude desktop app is one app with three tabs — **Chat**, **Cowork**, and
+**Code**. Install ADA once and it's available in all of them.
 
-1. Open the **Claude** desktop app.
-2. Drag the **`adp-discovery.plugin`** file into the chat window and drop it.
-   - *Alternative:* open **Settings → Plugins → Install from file** and select
-     `adp-discovery.plugin`.
-3. When the install card appears, click **Install / Accept**.
-4. Connect your mailbox: **Settings → Connectors → Add** → choose **Gmail** (or
-   Outlook) and sign in. *(Optional: also add **QuickBooks**.)*
-5. Start a new chat and type:
+> Update first: download/update from <https://claude.com/download> (needs the
+> **April 2026 build or newer**). Windows is **x64 only** (not ARM).
+
+**Where can ADA read your files? It depends on the tab:**
+> - **Cowork** — runs in an isolated VM with folder permissions you grant → can
+>   collect from a local drop folder. **Best for ADA.**
+> - **Code** — direct access to a project folder you pick → also works locally.
+> - **Chat** — no local file access → you **upload** the exported reports into the
+>   chat when ADA asks.
+
+### Option A — install as a Skill (works across all three tabs) — recommended
+
+1. Open **Settings → Capabilities** and turn on **Skills**.
+2. In the sidebar click **Customize** (the unified skills / connectors / plugins
+   directory) → **Skills → Upload** → select **`adp-discovery-skill.zip`**.
+3. Connect your mailbox: **Settings → Connectors → Add → Gmail** (or Outlook) and
+   sign in. *(Optional: add **QuickBooks**.)*
+4. Open a **Cowork** (or **Code**) tab so ADA can reach your files, and type:
    > *ADP asked us for documents — help me gather everything they requested.*
 
-That's it. ADA will greet you and begin.
+### Option B — install as a Cowork plugin
+
+If you were given the **`.plugin`** file instead of the skill zip:
+
+1. Open the app and go to the **Cowork** tab.
+2. Drag **`adp-discovery.plugin`** into the chat and drop it (or **Settings →
+   Plugins → Install from file**), then click **Install / Accept**.
+3. Add your **Gmail** / **QuickBooks** connectors as in Option A, step 3.
+4. In the Cowork tab, type the request above.
 
 ---
 
