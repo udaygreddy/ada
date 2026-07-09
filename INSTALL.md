@@ -31,9 +31,11 @@ Depending on your tool, you'll use one of these (your ADP contact provides them)
   - **Windows:** install from <https://www.python.org/downloads/> and **tick
     "Add python.exe to PATH"** during setup. Check in **PowerShell**:
     `python --version`.
-- A **mailbox connector** (Gmail or Outlook) so ADA can find the ADP request
-  email. Optionally a **QuickBooks** connector if ADP asked for accounting data.
-  (How to connect these is in each section below.)
+- *(Optional, recommended)* a **mailbox connector** (Gmail or Outlook) so ADA can
+  find the ADP request email itself. **Not required** — you can paste the ADP
+  request into the chat instead and ADA works from that. Optionally a
+  **QuickBooks** connector if ADP asked for accounting data. (How to connect
+  these is in each section below.)
 
 ---
 
