@@ -10,8 +10,10 @@ Supported systems: **Paychex** and **Paylocity** (payroll — guided export) and
 ## Two roles: requirements vs. taxonomy
 
 - **Requirements (the WHAT)** — which documents *this* client must provide — are
-  derived from the **ADP request email** (Phase 0; future: a Salesforce Case via
-  MCP). This is the per-client checklist.
+  derived from the **ADP request**: text the operator pastes into chat and/or the
+  request email in any connected mailbox (Phase 0; operator input is primary,
+  email enriches it; future: a Salesforce Case via MCP). This is the per-client
+  checklist.
 - **Taxonomy (the HOW/WHERE)** — `taxonomy.yaml` is a master *catalog*. Once a
   requirement is mapped to a taxonomy id, the catalog supplies the source system,
   collection method, and sensitivity for that document type.
@@ -51,7 +53,7 @@ SKILL.md / AGENTS.md      host entry points → PROCEDURE.md
 PROCEDURE.md              the Phase 0 → scan → review → package workflow
 taxonomy.yaml             master catalog: source + method + sensitivity per type
 connectors/
-  mailbox.md              derive requirements from ADP emails (Gmail, read-only)
+  mailbox.md              enrich requirements from ADP emails (any mail connector, optional)
   salesforce_case.md      future requirement source (Salesforce Case via MCP)
   paychex_export.md       Paychex export navigation (guided ingest)
   paylocity_export.md     Paylocity export navigation (guided ingest)

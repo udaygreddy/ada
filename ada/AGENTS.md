@@ -8,12 +8,14 @@ truth for the scan → review → package workflow and the non-negotiable rules.
 source authorization and document approval through `scripts/ledger.py`, and
 produce a local `ada_package/` folder that the client transmits to ADP.
 
-The per-client requirement list (the WHAT) comes from the ADP request **email**
-(Phase 0); the **taxonomy** is only a catalog of HOW/WHERE per document type.
+The per-client requirement list (the WHAT) comes from the **ADP request** —
+text the user pastes and/or the request email in any connected mailbox (Phase 0;
+user input is primary, email enriches it — never re-ask for a list already
+given). The **taxonomy** is only a catalog of HOW/WHERE per document type.
 
 Map of the bundle:
 - [PROCEDURE.md](PROCEDURE.md) — the workflow to execute (Phase 0 → A → B → C).
-- [connectors/mailbox.md](connectors/mailbox.md) — derive requirements from ADP emails (Gmail, read-only).
+- [connectors/mailbox.md](connectors/mailbox.md) — enrich requirements from ADP emails (any mail connector, read-only, optional).
 - [connectors/salesforce_case.md](connectors/salesforce_case.md) — future requirement source.
 - [taxonomy.yaml](taxonomy.yaml) — master catalog: source + method + sensitivity per document type.
 - [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export navigation.

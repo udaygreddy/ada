@@ -14,8 +14,9 @@ Accept the `adp-discovery.plugin` card in chat.
 
 ## Prerequisites
 
-- **Gmail connector** connected in Cowork — used read-only in Phase 0 to find the
-  ADP request email and derive the requirement list.
+- *(Optional, recommended)* a **mail connector** (Gmail or Outlook) — used
+  read-only in Phase 0 to find the ADP request email. **Not required:** you can
+  simply paste the ADP request into chat and ADA works from that.
 - *(Optional)* **QuickBooks (QBO)** connector — for read-only GL/financial pulls.
 - Paychex / Paylocity need no connector (the skill guides a manual export).
 - `python3` on the machine (bundled scripts are stdlib-only; nothing to install).
