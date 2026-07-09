@@ -67,7 +67,8 @@ shell/code execution, and MCP.** ADA exploits that by splitting work so the
 |---|---|
 | Classify candidates against the taxonomy | Enumerate files, compute content hashes |
 | Talk to the operator, propose matches | Run PII regex (code — content never reaches the LLM) |
-| Orchestrate scan → review → package | Write the append-only, hash-chained consent ledger |
+| Read a file & extract its covered dates / type | Resolve period phrases ("last quarter" → a concrete range) + decide the validation verdict |
+| Orchestrate scan → validate → review → package | Write the append-only, hash-chained consent ledger |
 | Explain gaps & next steps | **Packager that refuses to stage any file lacking a ledger approval token** |
 
 **Why this matters:** the only path a file takes into the package is through the
@@ -86,6 +87,7 @@ tools, bundled scripts, or MCP. The procedure never names a vendor tool.
 | `LOCAL.list / LOCAL.read` | Enumerate & read local files | Native filesystem tools / `scripts/enumerate.py` |
 | `SOURCE.list / SOURCE.fetch` | Enumerate & retrieve from a cloud source | MCP connector (Drive, SharePoint, Gmail, QuickBooks…) |
 | `PII.scan(ref)` | Local pattern scan for sensitive data | `scripts/pii_scan.py` — never an external call |
+| `VALIDATE(file, expected)` | Check a file matches its requirement (type + period) | `scripts/validate.py` — resolves periods, returns pass/warn/fail |
 | `LEDGER.record / LEDGER.verify` | Append consent event / mint & check approval tokens | `scripts/ledger.py` |
 | `PACKAGE.assemble` | Stage only ledger-approved files + emit manifest | `scripts/package.py` |
 | `ASK.confirm` | Get an explicit human decision | The host's normal chat turn |
@@ -140,14 +142,20 @@ phase delegates its *control* steps to scripts (§3).
    taxonomy → `{item_id, confidence, rationale}`, metadata-first, content only
    when ambiguous and not PII-flagged.
 
-### Phase B — REVIEW (human consent, per document)
+### Phase B — VALIDATE + REVIEW (human consent, per document)
 
 1. Present candidates grouped by checklist item, highest confidence first.
-2. For each, the operator decides **include / exclude / defer** — **gate 2**.
+2. **Validate** each candidate the operator wants to include against its
+   requirement (document type + period). The agent extracts the file's covered
+   dates/type (reads content; for PDF/XLSX it supplies the dates); `validate.py`
+   resolves the expected period deterministically and returns `pass/warn/fail`.
+3. For each, the operator decides **include / exclude / defer** — **gate 2**.
    PII-flagged items show `⚠ sensitive — confirm` and are never pre-checked.
-3. On "include," `ledger.py` records the decision and **mints an approval token**
-   bound to the file's content hash. No token → the packager will reject it.
-4. Show the running gap view: items still `missing` or `partial`.
+4. On "include," `ledger.py` records the decision **with the validation verdict**
+   and **mints an approval token** bound to the file's content hash. A `fail` is
+   **refused unless the operator records an override**. No token → the packager
+   will reject it.
+5. Show the running gap view: items still `missing` or `partial`.
 
 ### Phase C — PACKAGE (assemble handoff)
 
@@ -171,8 +179,16 @@ prior line breaks the chain. Two record types matter:
 
 - **source authorization** — `action: "authorize_source"`.
 - **document approval** — `action: "approve_document"`, `payload.token`,
-  `payload.content_hash`. `package.py` admits a file iff a matching unrevoked
-  token exists whose `content_hash` equals the file's current hash.
+  `payload.content_hash`, and `payload.validation` (`{status, note, override}`).
+  `package.py` admits a file iff a matching unrevoked token exists whose
+  `content_hash` equals the file's current hash.
+
+**Two code-enforced gates, not one.** Beyond the consent gate (no token → not
+packaged), `ledger.py approve` **refuses a file whose validation `status` is
+`fail`** unless an explicit `--override` is passed — and the override is written
+into the tamper-evident chain. So a file that doesn't match its requirement
+(wrong quarter, wrong type) cannot enter the package silently; it takes a logged,
+deliberate operator decision.
 
 This makes the gate structural (§3) and the audit code-written (§2/7). It is
 **tamper-evident, not tamper-proof** — a determined client could regenerate the

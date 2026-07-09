@@ -122,7 +122,7 @@ candidates appear.
 
 ---
 
-## 4. Procedure (specialized scan/review/package)
+## 4. Procedure (specialized scan/validate/review/package)
 
 ### SCAN
 1. Load `taxonomy.yaml`; confirm scope with operator (payroll-from-Paychex,
@@ -132,10 +132,16 @@ candidates appear.
 3. **Paychex:** gate 1 → present export checklist → operator drops files →
    `enumerate.py` + `pii_scan.py` → classify.
 
-### REVIEW
+### VALIDATE + REVIEW
+- **Validate** each candidate against its requirement (document type + period).
+  The agent extracts the file's covered dates/type; `validate.py` resolves the
+  expected period ("last quarter" → a concrete range) and returns
+  `pass/warn/fail`. Present expected-vs-actual to the operator.
 - Per-artifact include/exclude/defer (gate 2). W-2s, paystubs, YTD, registers,
   employee census → `⚠ sensitive — confirm`, never pre-checked. On include,
-  `ledger.py` mints an approval token bound to the file hash.
+  `ledger.py` records the **validation verdict** and mints an approval token bound
+  to the file hash. A validation `fail` is **refused unless the operator records
+  an override** — logged in the chain.
 
 ### PACKAGE
 - `package.py` stages only ledger-approved artifacts, organized by section, and
@@ -150,7 +156,7 @@ candidates appear.
 ada/                       # canonical skill — the folder you edit
   SKILL.md                 # Claude entry
   AGENTS.md                # Codex / Cursor / Copilot entry
-  PROCEDURE.md             # scan/review/package core (from PLAYBOOK §5)
+  PROCEDURE.md             # scan/validate/review/package core (from PLAYBOOK §5)
   taxonomy.yaml            # the §2 subset, structured
   connectors/
     intuit.md              # read-tool allow-list + materialization rules
@@ -159,7 +165,8 @@ ada/                       # canonical skill — the folder you edit
   scripts/
     enumerate.py           # list + hash + pre-filter (Paychex folder; QBO outputs)
     pii_scan.py            # SSN / routing / account / EIN flagging
-    ledger.py              # hash-chained ledger + approval tokens
+    validate.py            # file-vs-requirement check (type + period); fail-gate
+    ledger.py              # hash-chained ledger + approval tokens + validation
     package.py             # stage approved-only; emit manifest + gap report
 ```
 
@@ -195,6 +202,11 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
 - **Read-only enforcement for QBO.** Must be a hard allow-list in the `intuit`
   connector, not a prose instruction — the QBO MCP exposes many write/delete
   tools that must be structurally unreachable.
+- **Validation checks (extensible).** `validate.py` covers document type + period
+  today. The check registry is built to grow — scope/population (all employees,
+  YTD-vs-QTD), employee-count, and per-provider heuristics are planned as
+  additional checks. For PDF/XLSX the agent supplies the covered dates (bundle
+  stays stdlib-only); a future parser could make binary validation self-contained.
 
 ---
 
@@ -204,6 +216,8 @@ Running ADA for a sample small-business client:
 1. Pulls QuickBooks company + financial artifacts read-only and materializes them.
 2. Guides a Paychex or Paylocity export and ingests + classifies the dropped files.
 3. Flags every W-2/paystub/register as sensitive and holds for explicit review.
-4. Produces a staging folder where **every file traces to a ledger approval
-   token**, plus `manifest.json`, a gap report (incl. the COA gap), and a
-   hash-chained ledger.
+4. **Validates** each included file against its requirement (type + period);
+   a mismatch (wrong quarter/type) blocks approval unless the operator overrides.
+5. Produces a staging folder where **every file traces to a ledger approval
+   token** and carries its validation verdict, plus `manifest.json`, a gap report
+   (incl. the COA gap and a validation summary), and a hash-chained ledger.
