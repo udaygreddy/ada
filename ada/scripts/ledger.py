@@ -21,6 +21,7 @@ Usage:
   ledger.py init      --ledger L --run-id R --client C --operator O --host H
   ledger.py authorize --ledger L --connector NAME --scope SCOPE
   ledger.py approve   --ledger L --path FILE --checklist-id ID [--note N]
+                      [--validation pass|warn|fail --validation-note N [--override]]
   ledger.py revoke    --ledger L --token TOKEN [--note N]
   ledger.py tokens    --ledger L            # list valid approval tokens
   ledger.py verify    --ledger L            # check chain integrity
@@ -76,6 +77,15 @@ def cmd_authorize(a):
 def cmd_approve(a):
     if not os.path.isfile(a.path):
         sys.exit(f"no such file: {a.path}")
+    # Validation gate: a file whose validation failed cannot be approved unless
+    # the operator explicitly overrides (which is recorded).
+    validation = None
+    if a.validation:
+        if a.validation == "fail" and not a.override:
+            sys.exit("refuse: validation FAILED — re-run with --override (and a "
+                     "--validation-note explaining why) to approve anyway")
+        validation = {"status": a.validation, "note": a.validation_note or "",
+                      "override": bool(a.override)}
     content_hash = _ada.sha256_file(a.path)
     token = secrets.token_hex(8)
     e = _append(a.ledger, "approve_document", a.path, {
@@ -84,9 +94,13 @@ def cmd_approve(a):
         "token": token,
         "source_ref": os.path.abspath(a.path),
         "note": a.note or "",
+        "validation": validation,
     })
     print(f"approved {a.path}")
     print(f"  checklist_id : {a.checklist_id}")
+    if validation:
+        ov = " (OVERRIDE)" if validation["override"] else ""
+        print(f"  validation   : {validation['status']}{ov}")
     print(f"  content_hash : {content_hash}")
     print(f"  token        : {token}   (seq {e['seq']})")
 
@@ -114,7 +128,8 @@ def valid_tokens(path):
 
 def record_requirement(path, req_id, requested_text, source_kind="email",
                        source_ref="", source_from="", source_date="",
-                       mapped_taxonomy_id="", kind="collect"):
+                       mapped_taxonomy_id="", kind="collect",
+                       expected_doc_type="", expected_period=""):
     """Append a per-client requirement (the WHAT for this client), derived from
     an ADP request source. The requirement list comes from the source; the
     taxonomy only supplies HOW/WHERE once `mapped_taxonomy_id` is set.
@@ -132,6 +147,8 @@ def record_requirement(path, req_id, requested_text, source_kind="email",
         "source_date": source_date,
         "mapped_taxonomy_id": mapped_taxonomy_id,
         "kind": kind,
+        "expected_doc_type": expected_doc_type,
+        "expected_period": expected_period,
     }
     return _append(path, "record_requirement", req_id, payload)
 
@@ -148,7 +165,8 @@ def requirements(path):
 def cmd_requirement(a):
     e = record_requirement(a.ledger, a.req_id, a.text, a.source_kind,
                            a.source_ref, a.source_from, a.source_date,
-                           a.taxonomy_id, a.kind)
+                           a.taxonomy_id, a.kind,
+                           a.expected_doc_type, a.expected_period)
     print(f"recorded requirement {a.req_id} (seq {e['seq']}) "
           f"-> {a.taxonomy_id or '(ad-hoc)'}  [{a.kind}]  via {a.source_kind}")
 
@@ -204,6 +222,12 @@ def main():
     s.add_argument("--path", required=True)
     s.add_argument("--checklist-id", required=True)
     s.add_argument("--note", default="")
+    s.add_argument("--validation", default="",
+                   choices=["", "pass", "warn", "fail", "na"],
+                   help="verdict from validate.py")
+    s.add_argument("--validation-note", default="")
+    s.add_argument("--override", action="store_true",
+                   help="required to approve a file whose validation failed")
 
     s = sub.add_parser("revoke"); s.set_defaults(fn=cmd_revoke)
     s.add_argument("--ledger", required=True)
@@ -221,6 +245,8 @@ def main():
     s.add_argument("--source-date", default="")
     s.add_argument("--taxonomy-id", default="")
     s.add_argument("--kind", default="collect", choices=["collect", "complete"])
+    s.add_argument("--expected-doc-type", default="")
+    s.add_argument("--expected-period", default="")
 
     s = sub.add_parser("tokens"); s.set_defaults(fn=cmd_tokens)
     s.add_argument("--ledger", required=True)

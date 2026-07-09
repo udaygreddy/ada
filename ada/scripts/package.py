@@ -86,6 +86,7 @@ def main():
             "sensitivity": cand.get("sensitivity", "unknown"),
             "decision": "included",
             "token": payload["token"],
+            "validation": payload.get("validation"),
             "staged_as": os.path.relpath(dest, a.out),
         }
         staged.append((key, cand, payload, dest))
@@ -100,15 +101,20 @@ def main():
         manifest = build_taxonomy_manifest(
             taxonomy, approved_keys, staged_by_key, run_meta)
 
+    manifest["counts"]["validation"] = validation_tally(staged)
+
     with open(os.path.join(a.out, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
     shutil.copy2(a.ledger, os.path.join(a.out, "ledger.jsonl"))
     write_gap_report(os.path.join(a.out, "gap_report.md"), manifest, staged)
 
     c = manifest["counts"]
+    v = c["validation"]
     print(f"packaged {len(staged)} file(s) → {a.out}")
     print(f"  mode: {manifest['mode']}  ·  collected {c['collected']}/"
           f"{c['requested' if reqs else 'in_scope']}  ·  {c['gaps']} gap(s)")
+    print(f"  validation: {v['validated']} ok · {v['warn']} warn · "
+          f"{v['fail_override']} override · {v['unvalidated']} not validated")
     if skipped_no_match:
         print(f"  WARNING: {len(skipped_no_match)} approved token(s) had no "
               f"matching current file (moved or changed) — not staged")
@@ -205,7 +211,7 @@ def write_gap_report(path, manifest, staged):
     ]
     for key, cand, payload, dest in staged:
         flag = " ⚠ sensitive" if cand.get("sensitivity") == "high" else ""
-        lines.append(f"- **{key}** — {cand['filename']}{flag}")
+        lines.append(f"- **{key}** — {cand['filename']}{flag}{_val_badge(payload.get('validation'))}")
     if not staged:
         lines.append("- (none)")
 
@@ -228,12 +234,50 @@ def write_gap_report(path, manifest, staged):
         for x in manifest["taxonomy_not_requested"]:
             lines.append(f"- {x['checklist_id']} {x['label']} ({x['system']})")
 
+    v = c.get("validation")
+    if v:
+        lines += ["", f"**Validation:** {v['validated']} validated · {v['warn']} "
+                  f"warning · {v['fail_override']} override · {v['unvalidated']} "
+                  f"not validated."]
+        if v["fail_override"]:
+            lines.append("> ❌ Some files were approved over a FAILED validation "
+                         "(override) — review the ledger before transmitting.")
+
     sensitive = [s for s in staged if s[1].get("sensitivity") == "high"]
     if sensitive:
         lines += ["", f"> ⚠ {len(sensitive)} staged file(s) are high-sensitivity "
                   f"(PII). Confirm secure handoff channel before transmitting."]
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+
+
+def _val_badge(v):
+    if not v:
+        return "  ·  ⬜ not validated"
+    s = v.get("status")
+    if s == "pass":
+        return "  ·  ✅ validated"
+    if s == "warn":
+        return "  ·  ⚠ validation warning"
+    if s == "fail":
+        return "  ·  ❌ validation FAILED (override)"
+    return "  ·  ⬜ n/a"
+
+
+def validation_tally(staged):
+    t = {"validated": 0, "warn": 0, "fail_override": 0, "unvalidated": 0}
+    for _key, _cand, payload, _dest in staged:
+        v = payload.get("validation")
+        s = v.get("status") if v else None
+        if s == "pass":
+            t["validated"] += 1
+        elif s == "warn":
+            t["warn"] += 1
+        elif s == "fail":
+            t["fail_override"] += 1
+        else:
+            t["unvalidated"] += 1
+    return t
 
 
 if __name__ == "__main__":

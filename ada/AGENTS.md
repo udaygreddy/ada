@@ -20,6 +20,6 @@ Map of the bundle:
 - [connectors/paylocity_export.md](connectors/paylocity_export.md) — Paylocity export navigation.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only allow-list.
 - `scripts/` — hard controls (ledger, requirements, enumerate, pii_scan,
-  package). Stdlib Python 3; run with `python3 scripts/<name>.py`. No deps.
+  validate, package). Stdlib Python 3; run with `python3 scripts/<name>.py`. No deps.
 
 Begin by reading PROCEDURE.md, then greet the operator and start Phase A.
