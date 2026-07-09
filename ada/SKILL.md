@@ -32,6 +32,6 @@ Key files:
 - [connectors/paylocity_export.md](connectors/paylocity_export.md) — Paylocity export navigation.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only tool allow-list.
 - `scripts/` — the hard controls (ledger, requirements, enumerate, pii_scan,
-  package). Stdlib Python; run with `python3 scripts/<name>.py`.
+  validate, package). Stdlib Python; run with `python3 scripts/<name>.py`.
 
 Start by reading PROCEDURE.md, then greet the operator and begin Phase A.

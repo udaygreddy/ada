@@ -70,9 +70,12 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 3. Record each requirement, mapping it to a taxonomy id where one fits:
    `python3 "$ADA_HOME/scripts/requirements.py" add --ledger ./.ada/ledger.jsonl --reqs ./.ada/requirements.jsonl
    --req-id <Rn> --text "<what ADP asked for>" --source-kind email
-   --source-ref <thread_id> --source-from <sender> --taxonomy-id <id>`
-   Use `--kind complete` for blank forms to fill; omit `--taxonomy-id` for ad-hoc
-   asks with no catalog match (note these to the operator — source is unknown).
+   --source-ref <thread_id> --source-from <sender> --taxonomy-id <id>
+   --expected-doc-type <taxonomy doc_type> --expected-period "<phrase from the ask>"`
+   Set `--expected-doc-type` to the mapped taxonomy item's `doc_type`, and
+   `--expected-period` to any period in the request (e.g. "last quarter",
+   "Q1 2026", "YTD") — these drive validation in Phase B. Use `--kind complete`
+   for blank forms; omit `--taxonomy-id` for ad-hoc asks with no catalog match.
 4. For each mapped requirement, read its taxonomy entry to learn HOW/WHERE to
    collect it (system, method, sensitivity). That drives Phase A.
 
@@ -108,11 +111,23 @@ sensitivity. Ask the operator to **include / exclude / defer**.
 
 - For `high`-sensitivity files, show `⚠ sensitive — confirm` and require an
   explicit yes; never pre-check them.
-- On **include**, record it (this mints the approval token):
-  `python3 "$ADA_HOME/scripts/ledger.py" approve --ledger ./.ada/ledger.jsonl --path <file> --checklist-id <id>`
+- **VALIDATE** before approving — does the file match the requirement (type +
+  period)?
+  - Extract the file's covered dates and doc type. For text/CSV, `validate.py`
+    reads dates itself; for **PDF/XLSX you must read the file and pass the dates**
+    via `--file-period-start/--file-period-end` and `--file-doc-type`.
+  - `python3 "$ADA_HOME/scripts/validate.py" --file <file>
+    --expected-doc-type <req doc_type> --expected-period "<req period>"
+    [--file-period-start YYYY-MM-DD --file-period-end YYYY-MM-DD --file-doc-type <type>]`
+  - Show the operator the verdict (expected vs. actual). Statuses: `pass` /
+    `warn` / `fail`.
+- On **include**, record it (this mints the approval token) with the verdict:
+  `python3 "$ADA_HOME/scripts/ledger.py" approve --ledger ./.ada/ledger.jsonl --path <file> --checklist-id <id>
+  --validation <pass|warn|fail> --validation-note "<verdict summary>"`
   Use the mapped **taxonomy id** as `<id>` for cataloged requirements; for an
-  ad-hoc requirement (no taxonomy match) use its **req_id** so the file ties back
-  to the requirement.
+  ad-hoc requirement use its **req_id**. **A `fail` is refused** unless the
+  operator explicitly agrees to include it anyway — then add `--override` (the
+  override is recorded in the ledger).
 - Do nothing in the ledger for exclude/defer.
 
 Show a running tally of collected vs. still-needed as you go.

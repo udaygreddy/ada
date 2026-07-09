@@ -29,7 +29,8 @@ import ledger as ledger_mod
 def cmd_add(a):
     e = ledger_mod.record_requirement(
         a.ledger, a.req_id, a.text, a.source_kind, a.source_ref,
-        a.source_from, a.source_date, a.taxonomy_id, a.kind)
+        a.source_from, a.source_date, a.taxonomy_id, a.kind,
+        a.expected_doc_type, a.expected_period)
     rec = e["payload"]
     rec["ledger_seq"] = e["seq"]
     if a.reqs:
@@ -66,6 +67,10 @@ def main():
     s.add_argument("--source-date", default="")
     s.add_argument("--taxonomy-id", default="")
     s.add_argument("--kind", default="collect", choices=["collect", "complete"])
+    s.add_argument("--expected-doc-type", default="",
+                   help="canonical doc_type from the mapped taxonomy item")
+    s.add_argument("--expected-period", default="",
+                   help='period phrase from requested_text, e.g. "last quarter"')
 
     s = sub.add_parser("list"); s.set_defaults(fn=cmd_list)
     s.add_argument("--ledger", required=True)
