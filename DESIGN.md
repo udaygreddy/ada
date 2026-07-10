@@ -134,9 +134,12 @@ candidates appear.
 
 ### VALIDATE + REVIEW
 - **Validate** each candidate against its requirement (document type + period).
-  The agent extracts the file's covered dates/type; `validate.py` resolves the
-  expected period ("last quarter" → a concrete range) and returns
-  `pass/warn/fail`. Present expected-vs-actual to the operator.
+  `validate.py` reads the content itself for text/CSV **and PDFs** (stdlib zlib
+  stream inflation + text extraction + keyword doc-type detection), resolves the
+  expected period ("last quarter" → a concrete range), and returns
+  `pass/warn/fail`. Only for scanned/image PDFs and XLSX does the agent read the
+  file and supply the dates/type (agent flags take precedence). Present
+  expected-vs-actual — and the extraction source — to the operator.
 - Per-artifact include/exclude/defer (gate 2). W-2s, paystubs, YTD, registers,
   employee census → `⚠ sensitive — confirm`, never pre-checked. On include,
   `ledger.py` records the **validation verdict** and mints an approval token bound
@@ -205,8 +208,10 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
 - **Validation checks (extensible).** `validate.py` covers document type + period
   today. The check registry is built to grow — scope/population (all employees,
   YTD-vs-QTD), employee-count, and per-provider heuristics are planned as
-  additional checks. For PDF/XLSX the agent supplies the covered dates (bundle
-  stays stdlib-only); a future parser could make binary validation self-contained.
+  additional checks. **PDFs are parsed in-script** (stdlib zlib inflation of
+  content streams + text-show extraction) — covers machine-generated payroll
+  PDFs; scanned/image PDFs and XLSX fall back to agent-supplied dates/type
+  (flags take precedence). The bundle stays stdlib-only.
 
 ---
 

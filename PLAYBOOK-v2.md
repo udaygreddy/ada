@@ -67,7 +67,7 @@ shell/code execution, and MCP.** ADA exploits that by splitting work so the
 |---|---|
 | Classify candidates against the taxonomy | Enumerate files, compute content hashes |
 | Talk to the operator, propose matches | Run PII regex (code — content never reaches the LLM) |
-| Read a file & extract its covered dates / type | Resolve period phrases ("last quarter" → a concrete range) + decide the validation verdict |
+| Read scanned/XLSX files & supply their dates/type (fallback only) | Extract dates/type from text, CSV, **and PDF content** (stdlib); resolve period phrases ("last quarter" → a concrete range); decide the validation verdict |
 | Orchestrate scan → validate → review → package | Write the append-only, hash-chained consent ledger |
 | Explain gaps & next steps | **Packager that refuses to stage any file lacking a ledger approval token** |
 
@@ -87,7 +87,7 @@ tools, bundled scripts, or MCP. The procedure never names a vendor tool.
 | `LOCAL.list / LOCAL.read` | Enumerate & read local files | Native filesystem tools / `scripts/enumerate.py` |
 | `SOURCE.list / SOURCE.fetch` | Enumerate & retrieve from a cloud source | MCP connector (Drive, SharePoint, Gmail, QuickBooks…) |
 | `PII.scan(ref)` | Local pattern scan for sensitive data | `scripts/pii_scan.py` — never an external call |
-| `VALIDATE(file, expected)` | Check a file matches its requirement (type + period) | `scripts/validate.py` — resolves periods, returns pass/warn/fail |
+| `VALIDATE(file, expected)` | Check a file matches its requirement (type + period) | `scripts/validate.py` — reads text/CSV/PDF content, resolves periods, returns pass/warn/fail |
 | `LEDGER.record / LEDGER.verify` | Append consent event / mint & check approval tokens | `scripts/ledger.py` |
 | `PACKAGE.assemble` | Stage only ledger-approved files + emit manifest | `scripts/package.py` |
 | `ASK.confirm` | Get an explicit human decision | The host's normal chat turn |
