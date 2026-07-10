@@ -33,12 +33,13 @@ don't depend on the model behaving:
 - `scripts/enumerate.py` — lists + SHA-256 hashes candidate files.
 - `scripts/pii_scan.py` — local regex sensitivity flagging (counts only, never
   stores PII values). Content scanned in code — never sent to the LLM.
-- `scripts/validate.py` — checks a collected file against its requirement
-  (document type + period); reads content itself for text/CSV **and PDFs**
-  (stdlib zlib stream extraction — covers machine-generated payroll PDFs),
-  resolves periods deterministically ("last quarter" → a concrete range) and
-  returns pass/warn/fail. Scanned PDFs/XLSX fall back to agent-supplied dates.
-  A `fail` blocks approval unless the operator records an override.
+- `scripts/validate.py` — validation support: `--extract` reads the file's
+  content (text/CSV directly; PDFs via stdlib zlib stream extraction), **masks
+  PII**, and resolves the expected period deterministically ("last quarter" → a
+  concrete range); the **agent then judges** pass/warn/fail from that text
+  (robust to print-date footers). The verdict is recorded via `ledger.py
+  approve`, whose fail-gate blocks a `fail` unless the operator records an
+  override. A deterministic check mode remains as an optional cross-check.
 - `scripts/package.py` — stages **only** ledger-approved, hash-matched files;
   emits `manifest.json` + `gap_report.md` (with a validation summary). Aborts if
   the ledger chain is broken.
