@@ -35,11 +35,16 @@ don't depend on the model behaving:
   stores PII values). Content scanned in code — never sent to the LLM.
 - `scripts/validate.py` — validation support: `--extract` reads the file's
   content (text/CSV directly; PDFs via stdlib zlib stream extraction), **masks
-  PII**, and resolves the expected period deterministically ("last quarter" → a
-  concrete range); the **agent then judges** pass/warn/fail from that text
-  (robust to print-date footers). The verdict is recorded via `ledger.py
-  approve`, whose fail-gate blocks a `fail` unless the operator records an
-  override. A deterministic check mode remains as an optional cross-check.
+  PII**, and resolves the expected period deterministically; `--required-quarters`
+  and `--expected-check-dates` compute calendar expectations (ADP's quarterly
+  timing rules; per-check-date schedules). The **agent judges every acceptance
+  check in `validations.yaml`** from that evidence — code never issues a
+  verdict. Verdicts are recorded via `ledger.py approve`, whose fail-gate blocks
+  a `fail` unless the operator records an override.
+- `validations.yaml` — the acceptance-check catalog, **keyed by document type**
+  (mined from ADP's onboarding guide): per-type checks, per-provider remediation
+  strings, companions/conditionals, and cross-document coverage checks. Adding a
+  future validation = adding a line to the right doc_type block.
 - `scripts/package.py` — stages **only** ledger-approved, hash-matched files;
   emits `manifest.json` + `gap_report.md` (with a validation summary). Aborts if
   the ledger chain is broken.
@@ -55,6 +60,7 @@ own report navigation; adding one doesn't touch the pipeline.
 SKILL.md / AGENTS.md      host entry points → PROCEDURE.md
 PROCEDURE.md              the Phase 0 → scan → review → package workflow
 taxonomy.yaml             master catalog: source + method + sensitivity per type
+validations.yaml          acceptance checks by doc_type + coverage (model-judged)
 connectors/
   mailbox.md              enrich requirements from ADP emails (any mail connector, optional)
   salesforce_case.md      future requirement source (Salesforce Case via MCP)

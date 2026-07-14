@@ -87,7 +87,7 @@ tools, bundled scripts, or MCP. The procedure never names a vendor tool.
 | `LOCAL.list / LOCAL.read` | Enumerate & read local files | Native filesystem tools / `scripts/enumerate.py` |
 | `SOURCE.list / SOURCE.fetch` | Enumerate & retrieve from a cloud source | MCP connector (Drive, SharePoint, Gmail, QuickBooks…) |
 | `PII.scan(ref)` | Local pattern scan for sensitive data | `scripts/pii_scan.py` — never an external call |
-| `VALIDATE(file, expected)` | Check a file matches its requirement (type + period) | `scripts/validate.py --extract` supplies resolved period + masked text; the **agent judges**; verdict recorded/gated via `ledger.py approve` |
+| `VALIDATE(file, expected)` | Judge a file against its doc-type acceptance checks | `validations.yaml` (checks by doc_type) + `scripts/validate.py` (`--extract` masked text, `--required-quarters`, `--expected-check-dates`); the **agent judges every check**; verdict recorded/gated via `ledger.py approve` |
 | `LEDGER.record / LEDGER.verify` | Append consent event / mint & check approval tokens | `scripts/ledger.py` |
 | `PACKAGE.assemble` | Stage only ledger-approved files + emit manifest | `scripts/package.py` |
 | `ASK.confirm` | Get an explicit human decision | The host's normal chat turn |
@@ -146,11 +146,13 @@ phase delegates its *control* steps to scripts (§3).
 
 1. Present candidates grouped by checklist item, highest confidence first.
 2. **Validate** each candidate the operator wants to include against its
-   requirement (document type + period). `validate.py --extract` supplies the
-   deterministically resolved target period plus the file's **PII-masked text**
-   (text/CSV/PDF, stdlib); the **agent judges** `pass/warn/fail` from that text
-   (robust to print-date footers); scanned PDFs/XLSX are read natively by the
-   agent instead.
+   doc-type's acceptance checks in `validations.yaml` (criteria mined from
+   ADP's onboarding guide; per-provider remediation on fail). `validate.py`
+   supplies the evidence — `--extract` PII-masked text, `--required-quarters` /
+   `--expected-check-dates` calendar expectations; the **agent judges every
+   check** `pass/warn/fail` (robust to print-date footers); scanned PDFs/XLSX
+   are read natively by the agent instead. Cross-document `coverage` checks run
+   once pre-package; misses become derived requirements.
 3. For each, the operator decides **include / exclude / defer** — **gate 2**.
    PII-flagged items show `⚠ sensitive — confirm` and are never pre-checked.
 4. On "include," `ledger.py` records the decision **with the validation verdict**

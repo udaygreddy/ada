@@ -229,6 +229,121 @@ def mask_pii(text):
     return masked
 
 
+# ---------- calendar helpers (deterministic EXPECTATIONS for the model) ----------
+# Code computes calendars; the model judges documents against them.
+
+def required_quarters(ref):
+    """ADP Quarterly Documentation Timing (from the onboarding guide): which
+    quarterly filings to request given today's date. Month-based windows with
+    early(<=day 14)/mid-late transition months and progressive collection.
+    Returns [(year, quarter, status)] where status is required|if-available|fallback."""
+    y, m, d = ref.year, ref.month, ref.day
+    early = d <= 14
+    if m == 1:
+        out = [(y - 1, 3, "required"), (y - 1, 4, "if-available")]
+    elif m in (2, 3):
+        out = [(y - 1, 4, "required")]
+    elif m == 4:
+        out = ([(y - 1, 4, "required"), (y, 1, "if-available")] if early
+               else [(y, 1, "required"), (y - 1, 4, "fallback")])
+    elif m in (5, 6):
+        out = [(y, 1, "required")]
+    elif m == 7:
+        out = ([(y, 1, "required"), (y, 2, "if-available")] if early
+               else [(y, 2, "required"), (y, 1, "fallback")])
+    elif m in (8, 9):
+        out = [(y, 1, "required"), (y, 2, "required")]
+    elif m == 10:
+        out = ([(y, 1, "required"), (y, 2, "required")] if early
+               else [(y, 1, "required"), (y, 2, "required"), (y, 3, "if-available")])
+    else:  # Nov, Dec
+        out = [(y, 1, "required"), (y, 2, "required"), (y, 3, "required")]
+    return out
+
+
+def cmd_required_quarters(a):
+    ref = dt.date.fromisoformat(a.ref_date) if a.ref_date else dt.date.today()
+    items = []
+    for (yy, q, status) in required_quarters(ref):
+        s, e = _quarter_range(yy, q)
+        items.append({"quarter": f"Q{q} {yy}", "start": s.isoformat(),
+                      "end": e.isoformat(), "status": status,
+                      "finalized": e < ref})
+    print(json.dumps({"mode": "required-quarters", "ref_date": ref.isoformat(),
+                      "quarters": items,
+                      "rules": ["never rely on a quarter that is not finalized",
+                                "allow fallback to the previous quarter",
+                                "flag any missing required quarter for follow-up"]},
+                     indent=2))
+    sys.exit(0)
+
+
+def expected_check_dates(frequency, anchor, ref):
+    """Expected payroll check dates for the CURRENT quarter (quarter of ref),
+    from quarter start through ref (never future dates). Cadence anchored on a
+    known real check date. Guide rule: each check date = one single-day report."""
+    qs, qe = _quarter_range(ref.year, _quarter_of(ref))
+    end = min(ref, qe)
+    dates = []
+    if frequency in ("weekly", "biweekly"):
+        step = dt.timedelta(days=7 if frequency == "weekly" else 14)
+        d = anchor
+        while d - step >= qs:            # walk back to the first in-quarter date
+            d -= step
+        while d < qs:                    # anchor earlier than quarter: walk forward
+            d += step
+        while d <= end:
+            dates.append(d)
+            d += step
+    elif frequency == "semimonthly":
+        d = qs.replace(day=1)
+        while d <= end:
+            fifteenth = d.replace(day=15)
+            nxt = (d.replace(year=d.year + 1, month=1, day=1) if d.month == 12
+                   else d.replace(month=d.month + 1, day=1))
+            eom = nxt - dt.timedelta(days=1)
+            for cd in (fifteenth, eom):
+                if qs <= cd <= end:
+                    dates.append(cd)
+            d = nxt
+    elif frequency == "monthly":
+        dom = anchor.day
+        d = qs.replace(day=1)
+        while d <= end:
+            nxt = (d.replace(year=d.year + 1, month=1, day=1) if d.month == 12
+                   else d.replace(month=d.month + 1, day=1))
+            eom = nxt - dt.timedelta(days=1)
+            cd = eom if dom >= 28 and anchor == _eom(anchor) else d.replace(day=min(dom, eom.day))
+            if qs <= cd <= end:
+                dates.append(cd)
+            d = nxt
+    return sorted(set(dates))
+
+
+def _eom(d):
+    nxt = (d.replace(year=d.year + 1, month=1, day=1) if d.month == 12
+           else d.replace(month=d.month + 1, day=1))
+    return nxt - dt.timedelta(days=1)
+
+
+def cmd_expected_check_dates(a):
+    if not a.frequency:
+        sys.exit("--expected-check-dates requires --frequency")
+    ref = dt.date.fromisoformat(a.ref_date) if a.ref_date else dt.date.today()
+    if a.frequency in ("weekly", "biweekly", "monthly") and not a.anchor:
+        sys.exit(f"--frequency {a.frequency} requires --anchor (a known check date)")
+    anchor = dt.date.fromisoformat(a.anchor) if a.anchor else ref
+    dates = expected_check_dates(a.frequency, anchor, ref)
+    qs, qe = _quarter_range(ref.year, _quarter_of(ref))
+    print(json.dumps({"mode": "expected-check-dates", "frequency": a.frequency,
+                      "quarter": f"Q{_quarter_of(ref)} {ref.year}",
+                      "window": f"{qs.isoformat()}..{min(ref, qe).isoformat()}",
+                      "check_dates": [d.isoformat() for d in dates],
+                      "rule": "each check date = one single-day report (start = end = check date)"},
+                     indent=2))
+    sys.exit(0)
+
+
 # ---------- extract mode (primary flow: code extracts, the model judges) ----------
 
 def cmd_extract(a):
@@ -326,7 +441,7 @@ def validate(expected, actual):
 
 def main():
     p = argparse.ArgumentParser(description="Validate a collected file vs its requirement")
-    p.add_argument("--file", required=True)
+    p.add_argument("--file", default="")
     p.add_argument("--expected-doc-type", default="")
     p.add_argument("--expected-period", default="")
     p.add_argument("--ref-date", default="")
@@ -335,11 +450,28 @@ def main():
                         "text for the model to judge (no verdict computed)")
     p.add_argument("--max-chars", type=int, default=12000,
                    help="extract mode: cap on emitted text (default 12000)")
+    p.add_argument("--required-quarters", action="store_true",
+                   help="calendar helper: which quarterly filings to request "
+                        "for --ref-date, per ADP's timing rules (no file needed)")
+    p.add_argument("--expected-check-dates", action="store_true",
+                   help="calendar helper: expected payroll check dates for the "
+                        "current quarter (needs --frequency and --anchor)")
+    p.add_argument("--frequency", default="",
+                   choices=["", "weekly", "biweekly", "semimonthly", "monthly"])
+    p.add_argument("--anchor", default="",
+                   help="a known real check date YYYY-MM-DD (sets the cadence)")
     p.add_argument("--file-period-start", default="")
     p.add_argument("--file-period-end", default="")
     p.add_argument("--file-doc-type", default="",
                    help="agent-detected type (required for PDF/XLSX)")
     a = p.parse_args()
+
+    if a.required_quarters:
+        cmd_required_quarters(a)   # prints JSON and exits
+    if a.expected_check_dates:
+        cmd_expected_check_dates(a)
+    if not a.file:
+        p.error("--file is required (except with --required-quarters / --expected-check-dates)")
 
     if a.extract:
         cmd_extract(a)  # prints JSON and exits
