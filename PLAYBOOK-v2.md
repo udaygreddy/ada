@@ -125,22 +125,29 @@ consumes it as `taxonomy.yaml`. Each item:
 
 ## 5. The procedure
 
-Three phases. A host may run them as one conversation or three commands. Each
-phase delegates its *control* steps to scripts (§3).
+Five stages (0 → A → B → B.5 → C). A host may run them as one conversation or as
+commands. Each stage delegates its *control* steps to scripts (§3).
 
-### Phase A — SCAN (discover candidates)
+### Phase 0 — REQUIREMENTS INTAKE (derive the WHAT)
 
-1. Load `taxonomy.yaml`. Confirm in-scope sections with the operator.
-2. For each source: **gate 1** — `ASK.confirm`, then `LEDGER.record` the source
-   authorization *before* first access.
-3. `enumerate.py` lists candidates and hashes them. Deterministic pre-filter
-   (folder/type/name heuristics) narrows the set *before* any LLM tokens are
-   spent — this is also the scale control (§10/#8).
-4. `pii_scan.py` flags sensitive candidates. PII-flagged files are tagged
-   `high` and their **content is never read for classification**.
-5. The agent classifies the (non-PII or metadata-only) candidates against the
-   taxonomy → `{item_id, confidence, rationale}`, metadata-first, content only
-   when ambiguous and not PII-flagged.
+1. Initialize the run (`LEDGER.record` genesis). Capture **intake facts** the
+   later stages need — payroll frequency, check dates, states, garnishments,
+   headcount, etc. — recorded once in the ledger and reused (`ledger.py fact`).
+2. Derive the **per-client requirement list** from the ADP request source,
+   source-priority: **operator-pasted text is primary**; a connected mailbox
+   (any provider) or, in future, a Salesforce Case is optional **enrichment**.
+   Never re-ask for what was already given. Each requirement records its source
+   provenance + the expected `doc_type` and period, and maps to a taxonomy id
+   for HOW/WHERE. (The taxonomy is a catalog; the requirement list is the WHAT.)
+
+### Phase A — SCAN (collect against the requirements)
+
+1. Group requirements by their mapped source system. For each source: **gate 1**
+   — `ASK.confirm`, then `LEDGER.record` the authorization *before* first access.
+2. Collect per the source connector (guided export for payroll providers;
+   read-only pull for QuickBooks). `enumerate.py` lists + hashes the results;
+   `pii_scan.py` flags sensitive files (`high`; content never read for
+   classification). The agent classifies each candidate to its requirement.
 
 ### Phase B — VALIDATE + REVIEW (human consent, per document)
 
@@ -160,6 +167,15 @@ phase delegates its *control* steps to scripts (§3).
    **refused unless the operator records an override**. No token → the packager
    will reject it.
 5. Show the running gap view: items still `missing` or `partial`.
+
+### Phase B.5 — COVERAGE (cross-document, before packaging)
+
+Judge the `coverage` checks in `validations.yaml` over the whole approved set —
+a register per expected check date (`--expected-check-dates`), SUI/SIT
+companions per 941, direct-deposit routing availability, and state/conditional
+artifacts. **Every miss becomes a derived requirement** so it lands in the gap
+report with exact instructions — the client fixes gaps *before* transmitting,
+not after ADP bounces the package. This is the primary round-trip reducer.
 
 ### Phase C — PACKAGE (assemble handoff)
 
