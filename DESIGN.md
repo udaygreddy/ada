@@ -133,13 +133,15 @@ candidates appear.
    `enumerate.py` + `pii_scan.py` → classify.
 
 ### VALIDATE + REVIEW
-- **Validate** each candidate against its requirement (document type + period).
-  `validate.py` reads the content itself for text/CSV **and PDFs** (stdlib zlib
-  stream inflation + text extraction + keyword doc-type detection), resolves the
-  expected period ("last quarter" → a concrete range), and returns
-  `pass/warn/fail`. Only for scanned/image PDFs and XLSX does the agent read the
-  file and supply the dates/type (agent flags take precedence). Present
-  expected-vs-actual — and the extraction source — to the operator.
+- **Validate** each candidate against its requirement (document type + period) —
+  **code extracts, the model judges, code records and gates**. `validate.py
+  --extract` reads the content (text/CSV directly; PDFs via stdlib zlib stream
+  inflation), **masks PII**, and deterministically resolves the expected period
+  ("last quarter" → a concrete range). The **agent judges** from that text —
+  it can tell check-date columns from report-generated footers — and produces
+  `pass/warn/fail` + reason. Scanned/image PDFs and XLSX: the agent reads the
+  file natively and judges the same way. A deterministic check mode remains as
+  an optional cross-check for clean CSVs.
 - Per-artifact include/exclude/defer (gate 2). W-2s, paystubs, YTD, registers,
   employee census → `⚠ sensitive — confirm`, never pre-checked. On include,
   `ledger.py` records the **validation verdict** and mints an approval token bound
@@ -205,13 +207,15 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
 - **Read-only enforcement for QBO.** Must be a hard allow-list in the `intuit`
   connector, not a prose instruction — the QBO MCP exposes many write/delete
   tools that must be structurally unreachable.
-- **Validation checks (extensible).** `validate.py` covers document type + period
-  today. The check registry is built to grow — scope/population (all employees,
-  YTD-vs-QTD), employee-count, and per-provider heuristics are planned as
-  additional checks. **PDFs are parsed in-script** (stdlib zlib inflation of
-  content streams + text-show extraction) — covers machine-generated payroll
-  PDFs; scanned/image PDFs and XLSX fall back to agent-supplied dates/type
-  (flags take precedence). The bundle stays stdlib-only.
+- **Validation (extensible).** Document type + period today; scope/population
+  (all employees, YTD-vs-QTD), employee-count, and per-provider heuristics can
+  be added as further judgment criteria. Split: **code** extracts text (PDFs
+  parsed in-script via stdlib zlib inflation — machine-generated payroll PDFs),
+  masks PII, resolves the target period, records the verdict, and enforces the
+  fail-gate; **the model** makes the match judgment from the extracted text
+  (robust to print-date footers and layout quirks that break regex spans).
+  Scanned/image PDFs and XLSX: the agent reads the file natively. The bundle
+  stays stdlib-only.
 
 ---
 
