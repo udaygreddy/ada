@@ -106,12 +106,13 @@
     font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--ink-soft); font-weight: 600;
   }
-  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 26px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
   .step { position: relative; }
   .step:not(:last-child)::after {
     content: "\2192"; position: absolute; right: -21px; top: 34px;
     color: var(--ink-faint); font-size: 17px;
   }
+  .step:nth-child(3n)::after { content: none; }
   .step .tag {
     font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--ink-faint); font-weight: 600;
@@ -178,7 +179,7 @@
   .pillar .mono { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); display: block; margin-top: 8px; }
 
   /* ---- outcome + footer ---- */
-  .outcomes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .outcomes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
   .outcome {
     background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px;
   }
@@ -203,7 +204,6 @@
     .steps { grid-template-columns: 1fr 1fr; }
     .step:not(:last-child)::after { display: none; }
     .pillars { grid-template-columns: 1fr 1fr; }
-    .outcomes { grid-template-columns: 1fr; }
     .problem { grid-template-columns: 1fr; }
     .crossing { grid-template-columns: 1fr; gap: 14px; }
     .boundary-note { text-align: left; padding-right: 0; justify-self: start; }
@@ -226,7 +226,7 @@
     <div class="chip"><b class="red">0</b><span>ADP logins to client systems &mdash; ever</span></div>
     <div class="chip"><b class="green">2</b><span>consent gates, enforced in code &mdash; not policy</span></div>
     <div class="chip"><b class="green">100%</b><span>of packaged files carry a client-approval token</span></div>
-    <div class="chip"><b>Every</b><span>document validated against what ADP asked for</span></div>
+    <div class="chip"><b>Every</b><span>document judged by the client's own AI against ADP's acceptance rules</span></div>
   </div>
 
   <h2>The problem</h2>
@@ -259,9 +259,9 @@
         <div class="step">
           <span class="tag">Validate</span>
           <div class="stepcard">
-            <h3>Right file, right quarter</h3>
-            <p>Each file is checked against the ask &mdash; correct document type, correct period. Sensitive numbers are masked before AI review. Mismatches are blocked.</p>
-            <span class="pill green">&check; pass</span> <span class="pill amber">override logged</span>
+            <h3>Right file, right quarter &mdash; judged by AI</h3>
+            <p>The client's own AI reads each file, PDFs included, and judges it against ADP's real acceptance rules &mdash; document type, period, unmasked SSNs, bank source. Numbers are masked before review; a failure blocks the file and shows the exact fix.</p>
+            <span class="pill green">&check; pass</span> <span class="pill amber">instant fix on fail</span>
           </div>
         </div>
         <div class="step">
@@ -270,6 +270,14 @@
             <h3>The client says yes &mdash; per file</h3>
             <p>Nothing is packaged without the client's explicit approval. W-2s and other sensitive files require a separate, deliberate confirmation.</p>
             <span class="pill green">consent gate</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Phase B.5 &middot; Coverage</span>
+          <div class="stepcard">
+            <h3>Checked as a set, not just file by file</h3>
+            <p>A register for every check date, state filings alongside the 941, routing info present. Anything missing becomes a new requirement here &mdash; not a surprise after ADP opens the package.</p>
+            <span class="pill grey">gap &rarr; new requirement</span>
           </div>
         </div>
         <div class="step">
@@ -310,8 +318,8 @@
       <span class="mono">reviewable &middot; no dependencies</span>
     </div>
     <div class="pillar">
-      <h3>Consent enforced in code</h3>
-      <p>Two approval gates are enforced by scripts, not by the AI's good behavior. A file without a client-approval token cannot enter the package.</p>
+      <h3>Judgment vs. control, kept separate</h3>
+      <p>The AI judges &mdash; it reads and decides. Small scripts control &mdash; they extract, mask, record, and gate. The AI can misjudge a file; it still can't get an unapproved one into the package.</p>
       <span class="mono">gate 1: source &middot; gate 2: per file</span>
     </div>
     <div class="pillar">
@@ -339,6 +347,10 @@
     <div class="outcome">
       <h3>Compliance built in</h3>
       <p>The legal boundary isn't a policy promise &mdash; it's the architecture. The audit ledger documents that the client approved every access and every file.</p>
+    </div>
+    <div class="outcome">
+      <h3>Gets smarter with every rejection</h3>
+      <p>Acceptance rules are data, not code. When a document gets bounced for a new reason, that becomes a rule &mdash; and every future run applies it automatically.</p>
     </div>
   </div>
 
