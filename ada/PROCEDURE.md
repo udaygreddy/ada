@@ -133,14 +133,18 @@ sensitivity. Ask the operator to **include / exclude / defer**.
   explicit yes; never pre-check them.
 - **VALIDATE** before approving — does the file match the requirement (type +
   period)?
-  - Extract the file's covered dates and doc type. For text/CSV, `validate.py`
-    reads dates itself; for **PDF/XLSX you must read the file and pass the dates**
-    via `--file-period-start/--file-period-end` and `--file-doc-type`.
-  - `python3 "$ADA_HOME/scripts/validate.py" --file <file>
-    --expected-doc-type <req doc_type> --expected-period "<req period>"
-    [--file-period-start YYYY-MM-DD --file-period-end YYYY-MM-DD --file-doc-type <type>]`
-  - Show the operator the verdict (expected vs. actual). Statuses: `pass` /
-    `warn` / `fail`.
+  - Run validation first **without** file flags — `validate.py` reads the
+    content itself for text/CSV **and PDFs** (it inflates PDF text streams and
+    extracts dates + detects the document type):
+    `python3 "$ADA_HOME/scripts/validate.py" --file <file>
+    --expected-doc-type <req doc_type> --expected-period "<req period>"`
+  - Check `extraction` in the output. If `dates_from`/`doc_type_from` is
+    `"none"` (scanned/image PDF, XLSX, exotic encoding), **you read the file
+    yourself** and re-run with what you found:
+    `--file-period-start YYYY-MM-DD --file-period-end YYYY-MM-DD --file-doc-type <type>`
+    (agent-supplied flags always take precedence over content extraction).
+  - Show the operator the verdict (expected vs. actual, and where the dates came
+    from). Statuses: `pass` / `warn` / `fail`.
 - On **include**, record it (this mints the approval token) with the verdict:
   `python3 "$ADA_HOME/scripts/ledger.py" approve --ledger ./.ada/ledger.jsonl --path <file> --checklist-id <id>
   --validation <pass|warn|fail> --validation-note "<verdict summary>"`
