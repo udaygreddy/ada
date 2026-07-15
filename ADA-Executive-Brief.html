@@ -1,0 +1,374 @@
+<title>ADA &mdash; Executive Brief</title>
+<style>
+  :root {
+    --ink: #1a2233;
+    --ink-soft: #465062;
+    --ink-faint: #8b93a5;
+    --paper: #f7f8f9;
+    --card: #ffffff;
+    --line: #dde1e8;
+    --accent: #c8102e;
+    --accent-soft: #fdeef0;
+    --verify: #1e7f4f;
+    --verify-soft: #e9f5ee;
+    --amber: #b96a00;
+    --amber-soft: #fdf3e4;
+    --zone: #eef1f5;
+    --mono: "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #e8eaee;
+      --ink-soft: #aeb6c4;
+      --ink-faint: #6d7687;
+      --paper: #12151c;
+      --card: #1a1f29;
+      --line: #2c3342;
+      --accent: #f0455a;
+      --accent-soft: #34181d;
+      --verify: #3fa871;
+      --verify-soft: #14281e;
+      --amber: #d98e2b;
+      --amber-soft: #2e2314;
+      --zone: #171c26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e8eaee; --ink-soft: #aeb6c4; --ink-faint: #6d7687;
+    --paper: #12151c; --card: #1a1f29; --line: #2c3342;
+    --accent: #f0455a; --accent-soft: #34181d;
+    --verify: #3fa871; --verify-soft: #14281e;
+    --amber: #d98e2b; --amber-soft: #2e2314;
+    --zone: #171c26;
+  }
+  :root[data-theme="light"] {
+    --ink: #1a2233; --ink-soft: #465062; --ink-faint: #8b93a5;
+    --paper: #f7f8f9; --card: #ffffff; --line: #dde1e8;
+    --accent: #c8102e; --accent-soft: #fdeef0;
+    --verify: #1e7f4f; --verify-soft: #e9f5ee;
+    --amber: #b96a00; --amber-soft: #fdf3e4;
+    --zone: #eef1f5;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 48px 28px 72px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  h1 {
+    font-size: clamp(30px, 4.5vw, 44px); font-weight: 800; letter-spacing: -0.02em;
+    margin: 10px 0 6px; text-wrap: balance;
+  }
+  .thesis {
+    font-size: clamp(17px, 2.2vw, 21px); color: var(--ink-soft);
+    max-width: 46em; margin: 0 0 26px; text-wrap: balance;
+  }
+  .thesis strong { color: var(--ink); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 44px; }
+  .chip {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 180px; flex: 1;
+  }
+  .chip b { font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .chip span { font-size: 13px; color: var(--ink-soft); }
+  .chip b.red { color: var(--accent); }
+  .chip b.green { color: var(--verify); }
+
+  h2 {
+    font-size: 13px; font-family: var(--mono); letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-faint); font-weight: 600;
+    margin: 46px 0 16px; display: flex; align-items: center; gap: 12px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  .problem { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .problem p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+  .problem p b { color: var(--ink); }
+
+  /* ---- the flow ---- */
+  .flowboard { margin-top: 8px; }
+  .zone {
+    border: 1.5px solid var(--line); border-radius: 14px; background: var(--zone);
+    padding: 22px 22px 18px; position: relative;
+  }
+  .zone-label {
+    position: absolute; top: -11px; left: 18px; background: var(--zone);
+    border: 1px solid var(--line); border-radius: 99px; padding: 2px 14px;
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-soft); font-weight: 600;
+  }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+  .step { position: relative; }
+  .step:not(:last-child)::after {
+    content: "\2192"; position: absolute; right: -21px; top: 34px;
+    color: var(--ink-faint); font-size: 17px;
+  }
+  .step:nth-child(3n)::after { content: none; }
+  .step .tag {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint); font-weight: 600;
+    display: block; margin-bottom: 6px;
+  }
+  .stepcard {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 14px 12px; min-height: 148px;
+  }
+  .stepcard h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .stepcard p { margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+  .stepcard .pill {
+    display: inline-block; margin-top: 9px; font-family: var(--mono); font-size: 10px;
+    padding: 2px 8px; border-radius: 99px; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .pill.green { background: var(--verify-soft); color: var(--verify); }
+  .pill.amber { background: var(--amber-soft); color: var(--amber); }
+  .pill.grey  { background: var(--zone); color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .crossing {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: 0; margin-top: 26px;
+  }
+  .boundary-note {
+    text-align: right; padding-right: 22px; font-size: 13px; color: var(--ink-soft); max-width: 34em; justify-self: end;
+  }
+  .boundary-note b { color: var(--ink); }
+  .cross-arrow {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent); font-weight: 700;
+  }
+  .cross-arrow .shaft {
+    width: 120px; height: 0; border-top: 2.5px solid var(--accent); position: relative;
+  }
+  .cross-arrow .shaft::after {
+    content: ""; position: absolute; right: -2px; top: -6.5px;
+    border: 5.5px solid transparent; border-left: 9px solid var(--accent);
+  }
+  .adp-box {
+    background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px;
+    padding: 16px 18px; justify-self: start; max-width: 330px;
+  }
+  .adp-box h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+  .adp-box ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-soft); }
+  .adp-box li { margin: 3px 0; }
+  .adp-box li b { color: var(--ink); }
+  .dashline {
+    border: none; border-top: 2px dashed var(--accent); opacity: 0.45; margin: 30px 0 8px;
+  }
+  .dash-caption {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); text-align: center; margin: 0 0 4px;
+  }
+
+  /* ---- trust pillars ---- */
+  .pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .pillar {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 16px 14px; border-top: 3px solid var(--verify);
+  }
+  .pillar h3 { margin: 0 0 6px; font-size: 14.5px; font-weight: 700; }
+  .pillar p { margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+  .pillar .mono { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); display: block; margin-top: 8px; }
+
+  /* ---- outcome + footer ---- */
+  .outcomes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .outcome {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px;
+  }
+  .outcome h3 { margin: 0 0 5px; font-size: 14.5px; }
+  .outcome p { margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+
+  .runsin {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  }
+  .runsin .lbl { font-size: 13px; color: var(--ink-soft); margin-right: 4px; }
+  .host {
+    font-family: var(--mono); font-size: 12px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 99px; padding: 4px 13px; color: var(--ink);
+  }
+  footer {
+    margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer .mono { font-family: var(--mono); }
+
+  @media (max-width: 900px) {
+    .steps { grid-template-columns: 1fr 1fr; }
+    .step:not(:last-child)::after { display: none; }
+    .pillars { grid-template-columns: 1fr 1fr; }
+    .problem { grid-template-columns: 1fr; }
+    .crossing { grid-template-columns: 1fr; gap: 14px; }
+    .boundary-note { text-align: left; padding-right: 0; justify-self: start; }
+    .cross-arrow .shaft { width: 0; height: 44px; border-top: none; border-left: 2.5px solid var(--accent); }
+    .cross-arrow .shaft::after { right: -6.5px; top: auto; bottom: -2px; border: 5.5px solid transparent; border-top: 9px solid var(--accent); }
+    .adp-box { justify-self: start; max-width: none; }
+  }
+  @media (max-width: 560px) {
+    .steps { grid-template-columns: 1fr; }
+    .stepcard { min-height: 0; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Executive brief &middot; Client onboarding</div>
+  <h1>ADA &mdash; the ADP Discovery Agent</h1>
+  <p class="thesis">Onboarding documents, collected by the <strong>client's own AI assistant</strong>, inside the client's own systems &mdash; validated, client-approved, and audit-logged. <strong>ADP never logs in.</strong></p>
+
+  <div class="chips">
+    <div class="chip"><b class="red">0</b><span>ADP logins to client systems &mdash; ever</span></div>
+    <div class="chip"><b class="green">2</b><span>consent gates, enforced in code &mdash; not policy</span></div>
+    <div class="chip"><b class="green">100%</b><span>of packaged files carry a client-approval token</span></div>
+    <div class="chip"><b>Every</b><span>document judged by the client's own AI against ADP's acceptance rules</span></div>
+  </div>
+
+  <h2>The problem</h2>
+  <div class="problem">
+    <p><b>Implementation associates are legally barred from client systems.</b> Today, collecting a client's payroll history, tax filings, and employee records means weeks of email back-and-forth &mdash; chasing files, receiving the wrong quarter, asking again.</p>
+    <p><b>ADA moves the work to where the access already exists:</b> the client's own AI assistant. ADP ships instructions, not a connection. The client's assistant does the collecting &mdash; guided, checked, and recorded at every step.</p>
+  </div>
+
+  <h2>How it works</h2>
+  <div class="flowboard">
+    <div class="zone">
+      <span class="zone-label">Client's environment &mdash; client's AI, client's credentials</span>
+      <div class="steps">
+        <div class="step">
+          <span class="tag">Phase 0 &middot; Request</span>
+          <div class="stepcard">
+            <h3>The ask becomes a checklist</h3>
+            <p>ADP's document request &mdash; pasted by the client or found in their inbox &mdash; becomes the working checklist. Every item traces to the original ask.</p>
+            <span class="pill grey">source recorded</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Phase A &middot; Collect</span>
+          <div class="stepcard">
+            <h3>Guided collection</h3>
+            <p>Click-by-click export guidance for Paychex or Paylocity; QuickBooks pulled read-only. No passwords shared, nothing installed on payroll systems.</p>
+            <span class="pill grey">read-only</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Validate</span>
+          <div class="stepcard">
+            <h3>Right file, right quarter &mdash; judged by AI</h3>
+            <p>The client's own AI reads each file, PDFs included, and judges it against ADP's real acceptance rules &mdash; document type, period, unmasked SSNs, bank source. Numbers are masked before review; a failure blocks the file and shows the exact fix.</p>
+            <span class="pill green">&check; pass</span> <span class="pill amber">instant fix on fail</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Phase B &middot; Approve</span>
+          <div class="stepcard">
+            <h3>The client says yes &mdash; per file</h3>
+            <p>Nothing is packaged without the client's explicit approval. W-2s and other sensitive files require a separate, deliberate confirmation.</p>
+            <span class="pill green">consent gate</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Phase B.5 &middot; Coverage</span>
+          <div class="stepcard">
+            <h3>Checked as a set, not just file by file</h3>
+            <p>A register for every check date, state filings alongside the 941, routing info present. Anything missing becomes a new requirement here &mdash; not a surprise after ADP opens the package.</p>
+            <span class="pill grey">gap &rarr; new requirement</span>
+          </div>
+        </div>
+        <div class="step">
+          <span class="tag">Phase C &middot; Package</span>
+          <div class="stepcard">
+            <h3>One complete handoff</h3>
+            <p>Approved documents are staged locally with a manifest, a gap report, and the full audit ledger &mdash; ready for the client to send.</p>
+            <span class="pill grey">staged locally</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="dash-caption" style="margin-top:30px">&mdash; &mdash; the trust boundary &mdash; &mdash;</p>
+    <div class="crossing">
+      <p class="boundary-note"><b>Only one thing ever crosses:</b> the finished package &mdash; and the <b>client</b> transmits it. ADA sends nothing on its own; ADP operates no connection into the client.</p>
+      <div class="cross-arrow">
+        <span>client sends</span>
+        <span class="shaft"></span>
+      </div>
+      <div class="adp-box">
+        <h3>What ADP receives</h3>
+        <ul>
+          <li><b>The documents</b>, organized by category</li>
+          <li><b>Manifest</b> &mdash; what was collected, from where, with validation verdicts</li>
+          <li><b>Gap report</b> &mdash; exactly what's still missing, and where to get it</li>
+          <li><b>Audit ledger</b> &mdash; the complete, tamper-evident consent record</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h2>Why it can be trusted</h2>
+  <div class="pillars">
+    <div class="pillar">
+      <h3>Zero access</h3>
+      <p>ADP ships a reviewable skill &mdash; plain instructions and small open scripts. No service, no login, no data path back to ADP.</p>
+      <span class="mono">reviewable &middot; no dependencies</span>
+    </div>
+    <div class="pillar">
+      <h3>Judgment vs. control, kept separate</h3>
+      <p>The AI judges &mdash; it reads and decides. Small scripts control &mdash; they extract, mask, record, and gate. The AI can misjudge a file; it still can't get an unapproved one into the package.</p>
+      <span class="mono">gate 1: source &middot; gate 2: per file</span>
+    </div>
+    <div class="pillar">
+      <h3>Tamper-evident record</h3>
+      <p>Every authorization, approval, and verdict is written to a hash-chained ledger. Alter any entry and the chain breaks &mdash; visibly.</p>
+      <span class="mono">sha-256 &middot; append-only</span>
+    </div>
+    <div class="pillar">
+      <h3>PII guarded</h3>
+      <p>SSNs and account numbers are detected in code, masked before AI review, and sensitive files are never auto-included.</p>
+      <span class="mono">flag &middot; mask &middot; confirm</span>
+    </div>
+  </div>
+
+  <h2>What this changes</h2>
+  <div class="outcomes">
+    <div class="outcome">
+      <h3>Faster starts</h3>
+      <p>Collection happens in one guided session instead of weeks of email rounds &mdash; and validation catches wrong-quarter files before they reach ADP.</p>
+    </div>
+    <div class="outcome">
+      <h3>Implementation sees the gaps</h3>
+      <p>The gap report tells the team exactly which items exist, which are missing, and where each one lives &mdash; before the first follow-up call.</p>
+    </div>
+    <div class="outcome">
+      <h3>Compliance built in</h3>
+      <p>The legal boundary isn't a policy promise &mdash; it's the architecture. The audit ledger documents that the client approved every access and every file.</p>
+    </div>
+    <div class="outcome">
+      <h3>Gets smarter with every rejection</h3>
+      <p>Acceptance rules are data, not code. When a document gets bounced for a new reason, that becomes a rule &mdash; and every future run applies it automatically.</p>
+    </div>
+  </div>
+
+  <h2>Where it runs</h2>
+  <div class="runsin">
+    <span class="lbl">Client's choice of assistant:</span>
+    <span class="host">Claude &middot; Cowork / Desktop / Code</span>
+    <span class="host">GitHub Copilot</span>
+    <span class="host">Cursor</span>
+    <span class="host">Codex</span>
+    <span class="lbl" style="margin-left:12px">Systems today:</span>
+    <span class="host">Paychex</span>
+    <span class="host">Paylocity</span>
+    <span class="host">QuickBooks</span>
+  </div>
+
+  <footer>
+    <span>ADA &mdash; ADP Discovery Agent &middot; one skill, installed by the client, run by the client</span>
+    <span class="mono">adp-discovery v0.1</span>
+  </footer>
+</div>

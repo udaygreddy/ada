@@ -18,6 +18,7 @@ Map of the bundle:
 - [connectors/mailbox.md](connectors/mailbox.md) — enrich requirements from ADP emails (any mail connector, read-only, optional).
 - [connectors/salesforce_case.md](connectors/salesforce_case.md) — future requirement source.
 - [taxonomy.yaml](taxonomy.yaml) — master catalog: source + method + sensitivity per document type.
+- [validations.yaml](validations.yaml) — per-doc-type acceptance checks judged by the model in Phase B, + coverage checks (B.5).
 - [connectors/paychex_export.md](connectors/paychex_export.md) — Paychex export navigation.
 - [connectors/paylocity_export.md](connectors/paylocity_export.md) — Paylocity export navigation.
 - [connectors/intuit.md](connectors/intuit.md) — QuickBooks read-only allow-list.

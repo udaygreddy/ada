@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADA — design &amp; flow</title>
+<style>
+  :root{
+    --bg:#faf9f7; --card:#ffffff; --line:#e7e4de;
+    --ink:#242220; --ink2:#5f5b54;
+    --blue-f:#e6f1fb; --blue-s:#2a6bb0; --blue-i:#0c447c;
+    --teal-f:#e1f5ee; --teal-s:#0f6e56; --teal-i:#085041;
+    --amber-f:#fbeccf; --amber-s:#b7791f; --amber-i:#7a4e12;
+    --purple-f:#eeedfe; --purple-s:#534ab7; --purple-i:#3c3489;
+    --gray-f:#f1efea; --gray-s:#9a968d; --gray-i:#3a3833;
+    --green-f:#e3f3e2; --green-s:#2e7d32; --green-i:#1b5e20;
+    --coral-f:#fbe6e0; --coral-s:#c0492e; --coral-i:#8a2e18;
+    --arrow:#9a968d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1917; --card:#232120; --line:#37342f;
+      --ink:#f2efe9; --ink2:#b8b3aa;
+      --blue-f:#123a5e; --blue-s:#6ea8dc; --blue-i:#cfe4f7;
+      --teal-f:#0d3d31; --teal-s:#5dcaa5; --teal-i:#c4eadd;
+      --amber-f:#4d3712; --amber-s:#e0a94b; --amber-i:#f6dca2;
+      --purple-f:#2f2a5c; --purple-s:#9a92e6; --purple-i:#d5d1f7;
+      --gray-f:#33302c; --gray-s:#8a867d; --gray-i:#d9d5cd;
+      --green-f:#1d4620; --green-s:#7cc47f; --green-i:#c3e6c4;
+      --coral-f:#5a271a; --coral-s:#e08a72; --coral-i:#f3c3b6;
+      --arrow:#8a867d;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 24px 72px}
+  header p{color:var(--ink2);margin:.4em 0 0}
+  h1{font-size:26px;font-weight:600;margin:0}
+  h2{font-size:19px;font-weight:600;margin:0 0 .1em}
+  .lede{font-size:17px;color:var(--ink2);margin-top:.6em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:24px 26px;margin-top:26px}
+  .card p{color:var(--ink2);margin:.2em 0 0}
+  .card svg{display:block;width:100%;height:auto;margin:14px 0 4px}
+  .tag{color:var(--ink2);font-size:13px;letter-spacing:.02em;text-transform:uppercase;margin:0 0 2px}
+  code{background:var(--gray-f);color:var(--ink);padding:.1em .35em;border-radius:5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}
+  footer{margin-top:34px;color:var(--ink2);font-size:14px;border-top:1px solid var(--line);padding-top:18px}
+  footer a{color:var(--blue-s)}
+  /* shared SVG text + node styles */
+  svg text{font-family:inherit}
+  .th{font-size:15px;font-weight:600;fill:var(--ink)}
+  .t{font-size:14px;font-weight:600}
+  .ts{font-size:12px;font-weight:400}
+  .free{fill:var(--ink2)}
+  .g-blue rect{fill:var(--blue-f);stroke:var(--blue-s)} .g-blue .t,.g-blue .ts{fill:var(--blue-i)}
+  .g-teal rect{fill:var(--teal-f);stroke:var(--teal-s)} .g-teal .t,.g-teal .ts{fill:var(--teal-i)}
+  .g-amber rect{fill:var(--amber-f);stroke:var(--amber-s)} .g-amber .t,.g-amber .ts{fill:var(--amber-i)}
+  .g-purple rect{fill:var(--purple-f);stroke:var(--purple-s)} .g-purple .t,.g-purple .ts{fill:var(--purple-i)}
+  .g-gray rect{fill:var(--gray-f);stroke:var(--gray-s)} .g-gray .t,.g-gray .ts{fill:var(--gray-i)}
+  .g-green rect{fill:var(--green-f);stroke:var(--green-s)} .g-green .ts{fill:var(--green-i)}
+  .g-coral rect{fill:var(--coral-f);stroke:var(--coral-s)} .g-coral .ts{fill:var(--coral-i)}
+  rect{stroke-width:1.2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>ADA — design &amp; flow</h1>
+  <p>ADP Discovery Agent · a portable skill a client runs in their own AI assistant to collect ADP onboarding documents, without ADP touching their systems.</p>
+  <p class="lede">One idea underpins the whole design: <strong>the client's model does the judgment; bundled stdlib code does the control.</strong> That split is what makes the audit trail trustworthy and the validation flexible at the same time.</p>
+</header>
+
+<section class="card">
+  <p class="tag">The flow</p>
+  <h2>From the ADP request to a client-transmitted package</h2>
+  <p>Five stages. The amber stages are the point of the whole thing — they catch document problems locally, so the client fixes them before ADP ever sees the package. That is what removes the back-and-forth.</p>
+  <svg viewBox="0 0 680 452" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>ADA collect-to-handoff flow</title>
+    <desc>Five stages from the ADP request to a client-transmitted package: requirements intake, scan and collect, validate and review, coverage, and package. The validate and coverage stages catch document problems before ADP sees them.</desc>
+    <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--arrow)"/></marker></defs>
+    <text class="th" x="4" y="22">The collect-to-handoff flow</text>
+    <text class="ts free" x="4" y="44">Amber stages catch document problems before ADP ever sees them.</text>
+    <g class="g-blue"><rect x="4" y="64" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="90">Phase 0 · requirements intake</text>
+      <text class="ts" x="24" y="108">the what, from ADP's request</text>
+      <text class="ts" x="656" y="97" text-anchor="end">pasted or mailbox</text></g>
+    <line x1="340" y1="118" x2="340" y2="133" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#ar)"/>
+    <g class="g-blue"><rect x="4" y="134" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="160">Phase A · scan &amp; collect</text>
+      <text class="ts" x="24" y="178">from the client's own systems</text>
+      <text class="ts" x="656" y="167" text-anchor="end">consent logged</text></g>
+    <line x1="340" y1="188" x2="340" y2="203" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#ar)"/>
+    <g class="g-amber"><rect x="4" y="204" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="230">Phase B · validate &amp; review</text>
+      <text class="ts" x="24" y="248">model judges each check</text>
+      <text class="ts" x="656" y="237" text-anchor="end">validations.yaml</text></g>
+    <line x1="340" y1="258" x2="340" y2="273" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#ar)"/>
+    <g class="g-amber"><rect x="4" y="274" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="300">Phase B.5 · coverage</text>
+      <text class="ts" x="24" y="318">gaps become new requirements</text>
+      <text class="ts" x="656" y="307" text-anchor="end">before handoff</text></g>
+    <line x1="340" y1="328" x2="340" y2="343" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#ar)"/>
+    <g class="g-blue"><rect x="4" y="344" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="370">Phase C · package</text>
+      <text class="ts" x="24" y="388">approved files, ready to send</text>
+      <text class="ts" x="656" y="377" text-anchor="end">manifest + ledger</text></g>
+  </svg>
+</section>
+
+<section class="card">
+  <p class="tag">The architecture</p>
+  <h2>Who does what — and why the trust holds</h2>
+  <p>The model is flexible where documents are messy (reading a PDF, judging whether it matches). The code is rigid where correctness must be guaranteed (masking PII, hashing, gating). Neither can do the other's job — and that is the safety property.</p>
+  <svg viewBox="0 0 680 356" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>ADA division of labor: the model judges, the code controls</title>
+    <desc>The client's model reads the request, classifies documents, and judges each acceptance check. Bundled stdlib code extracts and masks text, resolves calendars, records in a hash-chained ledger, and enforces the gates. The model can misjudge but cannot package a file the ledger has not blessed.</desc>
+    <g class="g-purple"><rect x="4" y="16" width="326" height="196" rx="8"/>
+      <text class="t" x="24" y="44">Model · judgment</text>
+      <text class="ts" x="24" y="76">read the ADP request</text>
+      <text class="ts" x="24" y="104">classify each document</text>
+      <text class="ts" x="24" y="132">judge every acceptance check</text>
+      <text class="ts" x="24" y="160">read PDFs when extract is weak</text>
+      <text class="ts" x="24" y="188">non-deterministic, flexible</text></g>
+    <g class="g-teal"><rect x="350" y="16" width="326" height="196" rx="8"/>
+      <text class="t" x="370" y="44">Code · deterministic control</text>
+      <text class="ts" x="370" y="76">extract text, mask PII</text>
+      <text class="ts" x="370" y="104">resolve quarters &amp; check dates</text>
+      <text class="ts" x="370" y="132">record in hash-chained ledger</text>
+      <text class="ts" x="370" y="160">enforce the two gates</text>
+      <text class="ts" x="370" y="188">stdlib only, client-reviewable</text></g>
+    <g class="g-gray"><rect x="4" y="232" width="672" height="56" rx="8"/>
+      <text class="t" x="24" y="258">The model can misjudge —</text>
+      <text class="ts" x="24" y="276">but it can't package a file the ledger hasn't blessed.</text></g>
+  </svg>
+</section>
+
+<section class="card">
+  <p class="tag">The validation framework</p>
+  <h2>Judged by the model, keyed by document type</h2>
+  <p>Acceptance criteria live in <code>validations.yaml</code>, organized by <code>doc_type</code> and mined from ADP's onboarding guide. On a failure the operator immediately sees the exact, provider-specific re-export fix — no waiting for an ADP rejection email. New rules are added as data, not code.</p>
+  <svg viewBox="0 0 680 236" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>ADA validation framework, keyed by document type</title>
+    <desc>A collected document with a doc type is checked against validations.yaml — the common checks plus that document type's checks. The client's model judges each check. Accepted files are recorded via the ledger; failed files immediately show the provider-specific re-export fix. Coverage checks then scan the whole set and turn missing pieces into new requirements.</desc>
+    <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--arrow)"/></marker></defs>
+    <text class="ts free" x="4" y="20">Green = accepted. Coral = fix and re-export, with the exact steps.</text>
+    <g class="g-gray"><rect x="4" y="40" width="150" height="54" rx="8"/>
+      <text class="t" x="22" y="66">collected doc</text>
+      <text class="ts" x="22" y="84">has a doc_type</text></g>
+    <line x1="154" y1="67" x2="177" y2="67" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#a2)"/>
+    <g class="g-gray"><rect x="179" y="40" width="164" height="54" rx="8"/>
+      <text class="t" x="197" y="66">validations.yaml</text>
+      <text class="ts" x="197" y="84">common + doc_type checks</text></g>
+    <line x1="343" y1="67" x2="366" y2="67" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#a2)"/>
+    <g class="g-gray"><rect x="368" y="40" width="118" height="54" rx="8"/>
+      <text class="t" x="386" y="66">model judges</text>
+      <text class="ts" x="386" y="84">each check</text></g>
+    <g class="g-green"><rect x="524" y="34" width="152" height="30" rx="6"/>
+      <text class="ts" x="540" y="53">accepted → ledger</text></g>
+    <g class="g-coral"><rect x="524" y="72" width="152" height="30" rx="6"/>
+      <text class="ts" x="540" y="91">fail → provider re-export fix</text></g>
+    <line x1="486" y1="62" x2="522" y2="50" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#a2)"/>
+    <line x1="486" y1="72" x2="522" y2="85" stroke="var(--arrow)" stroke-width="1.5" marker-end="url(#a2)"/>
+    <g class="g-amber"><rect x="4" y="146" width="672" height="54" rx="8"/>
+      <text class="t" x="24" y="172">then coverage checks the whole set</text>
+      <text class="ts" x="24" y="190">missing pieces become new requirements — fixed before handoff</text></g>
+  </svg>
+</section>
+
+<footer>
+  Source of truth: <a href="PLAYBOOK-v2.md">PLAYBOOK-v2.md</a> (host-neutral core),
+  <a href="DESIGN.md">DESIGN.md</a> (Paychex / Paylocity / Intuit instantiation),
+  <a href="ada/validations.yaml">ada/validations.yaml</a> (the acceptance-check catalog),
+  and <a href="ada/PROCEDURE.md">ada/PROCEDURE.md</a> (the workflow the skill runs).
+  Open this file in any browser — it is fully self-contained and adapts to light or dark.
+</footer>
+</div>
+</body>
+</html>

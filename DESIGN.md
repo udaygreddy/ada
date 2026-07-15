@@ -133,15 +133,23 @@ candidates appear.
    `enumerate.py` + `pii_scan.py` → classify.
 
 ### VALIDATE + REVIEW
-- **Validate** each candidate against its requirement (document type + period) —
-  **code extracts, the model judges, code records and gates**. `validate.py
-  --extract` reads the content (text/CSV directly; PDFs via stdlib zlib stream
-  inflation), **masks PII**, and deterministically resolves the expected period
-  ("last quarter" → a concrete range). The **agent judges** from that text —
-  it can tell check-date columns from report-generated footers — and produces
-  `pass/warn/fail` + reason. Scanned/image PDFs and XLSX: the agent reads the
-  file natively and judges the same way. A deterministic check mode remains as
-  an optional cross-check for clean CSVs.
+- **Validate** each candidate against `validations.yaml` — the acceptance-check
+  catalog **keyed by document type** (mined from ADP's onboarding guide) —
+  **code extracts, the model judges every check, code records and gates**.
+  `validate.py --extract` supplies PII-masked content + the resolved target
+  period; `--required-quarters` / `--expected-check-dates` supply calendar
+  expectations. The **agent judges** the `common` + `doc_types.<type>` checks
+  from that evidence (masked-SSN detection, quarter finality, bank-proof
+  provenance, range rules, …) and, **on fail, immediately shows the per-provider
+  `remediation`** — the exact re-export fix. Scanned/image PDFs and XLSX: the
+  agent reads the file natively and judges the same way.
+
+### COVERAGE (Phase B.5, pre-package)
+- Cross-document checks from `validations.yaml` `coverage`: a register per
+  expected check date, SUI/SIT companions per 941, DD routing availability,
+  conditional artifacts (garnishments, PTO tracker, state POA/BIN). **Every miss
+  becomes a derived requirement**, so the gap report tells the client exactly
+  what to pull before anything goes to ADP.
 - Per-artifact include/exclude/defer (gate 2). W-2s, paystubs, YTD, registers,
   employee census → `⚠ sensitive — confirm`, never pre-checked. On include,
   `ledger.py` records the **validation verdict** and mints an approval token bound
@@ -207,15 +215,15 @@ the two `connectors/` specs. Everything else is shared and host-neutral.
 - **Read-only enforcement for QBO.** Must be a hard allow-list in the `intuit`
   connector, not a prose instruction — the QBO MCP exposes many write/delete
   tools that must be structurally unreachable.
-- **Validation (extensible).** Document type + period today; scope/population
-  (all employees, YTD-vs-QTD), employee-count, and per-provider heuristics can
-  be added as further judgment criteria. Split: **code** extracts text (PDFs
-  parsed in-script via stdlib zlib inflation — machine-generated payroll PDFs),
-  masks PII, resolves the target period, records the verdict, and enforces the
-  fail-gate; **the model** makes the match judgment from the extracted text
-  (robust to print-date footers and layout quirks that break regex spans).
-  Scanned/image PDFs and XLSX: the agent reads the file natively. The bundle
-  stays stdlib-only.
+- **Validation framework (extensible by data, not code).** Acceptance checks
+  live in `validations.yaml`, **keyed by document type** (mirrors how the ADP
+  guide defines criteria report-by-report and how files arrive classified).
+  Every check is **model-judged** from code-extracted, PII-masked evidence;
+  code contributes only calendar expectations (`--required-quarters`,
+  `--expected-check-dates`), masking, recording, and the fail-gate. Learning
+  loop: a new ADP rejection reason = one new check line in the right doc_type
+  block (+ per-provider remediation); bump `ruleset_version`. The bundle stays
+  stdlib-only.
 
 ---
 

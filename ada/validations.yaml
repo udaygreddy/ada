@@ -1,0 +1,219 @@
+# ADA validation rules — architected BY DOCUMENT TYPE.
+#
+# How this file is used (PROCEDURE Phase B / B.5):
+#   Every check is judged by YOU, the model running in the client's assistant —
+#   never by a script. Formats and layouts vary too much for regex; you read the
+#   PII-masked extracted text from `validate.py --extract` (or the file natively
+#   when extraction is weak/empty) and judge each applicable check.
+#   For a document classified to <doc_type>: judge `common` checks + the
+#   `doc_types.<doc_type>` checks (honoring any `when` fact conditions).
+#   `coverage` checks run once across ALL approved documents, before packaging.
+#   Verdicts: pass | warn | fail. Overall = worst applicable. `fail` cannot be
+#   approved without a logged operator --override (enforced by ledger.py).
+#   On fail, IMMEDIATELY show the doc_type's `remediation` for the client's
+#   payroll provider — the exact re-export fix, so the client corrects it now
+#   instead of after an ADP rejection email.
+#
+# Evidence conventions (from validate.py --extract):
+#   ▮▮▮  = a real value was present and ADA masked it for privacy (GOOD —
+#          the source document contains the value).
+#   Literal XXX-XX-1234 / ***-**-#### / "ON FILE"  = the SOURCE export was
+#          masked or omitted the value (BAD — ADP cannot use it).
+#   Deterministic expectations come from code, never guess them:
+#     validate.py --required-quarters --ref-date <today>     → which quarters
+#     validate.py --expected-check-dates --frequency ... --anchor ...  → which check dates
+#
+# HOW TO ADD A VALIDATION (the learning loop):
+#   When ADP reports a new rejection reason, find the doc_type block it belongs
+#   to (or add a new block, or a coverage entry) and add one check:
+#     - {id: kebab-case-name, severity: fail|warn, judge: "question to assess"}
+#   Add per-provider `remediation` text if the fix is a re-export. Bump
+#   ruleset_version. No code or procedure changes needed.
+
+ruleset_version: 1
+
+common:                     # judged for EVERY document
+  - id: matches-request
+    severity: fail
+    judge: >-
+      Does this document match what the requirement asked for — right document
+      type and right period? Use the resolved_period from --extract as the
+      target range. Read check dates / period columns; IGNORE report-generated
+      and print dates.
+  - id: legible-complete
+    severity: warn
+    judge: >-
+      Is the document legible and complete — readable text or clean native
+      render, no truncated pages, no obviously missing sections, not corrupt,
+      not an accidental duplicate of another submitted file?
+
+doc_types:
+
+  employee_masterfile:
+    checks:
+      - id: ssn-unmasked
+        severity: fail
+        judge: >-
+          ▮▮▮ where SSNs belong = full SSNs present in the source (pass).
+          Literal masked patterns (XXX-XX-1234, ***-**-1234, x's, "ON FILE") =
+          the SOURCE export was masked (fail). No SSN column/field at all =
+          fail. ADP cannot load employees without full SSNs — this is the #1
+          re-export cause.
+      - id: required-fields
+        severity: warn
+        judge: >-
+          Per employee: name, SSN (masked as ▮▮▮ is fine), date of birth, hire
+          date, pay rate(s), home address; email if this doubles as the contact
+          list. Missing columns → warn and name them.
+      - id: includes-terminated
+        severity: warn
+        judge: >-
+          Must include ALL active employees PLUS terminated employees paid this
+          calendar year. Compare apparent row count to facts.active_employee_count;
+          if only actives appear (or count is short), warn.
+    remediation:
+      paychex: "People List → click each employee → Profile → DOWNLOAD PROFILE. Repeat for all active + terminated employees paid this calendar year."
+      paylocity: "Re-run 'Master Control by Date Range' (Current Year to Date) and on export ensure 'Hide Social Security Numbers' is UNCHECKED (select Show)."
+      qbo: "Reports → Employee Detail → click the blue View button to unmask SSN and date of birth → export to Excel."
+
+  payroll_register:
+    checks:
+      - id: covers-required-quarter
+        severity: fail
+        judge: >-
+          Register/journal covers payrolls in the required quarter (per
+          --required-quarters). Check-date entries inside the range; a file of
+          the wrong quarter fails.
+      - id: single-day-exports
+        severity: warn
+        judge: >-
+          Where the provider flow exports per check date (e.g. Paylocity PXP),
+          each export must be a SINGLE-DAY range (start = end = check date) —
+          no combined or rolling ranges.
+    remediation:
+      paychex: "Quick Reports → All Reports → Payroll Journal → check ALL payrolls in the quarter → Download → Combine."
+      paylocity: "Reports & Analytics → Reporting → Payroll Register Summary → Payroll Filters: Process Date Range → one single-day export per check date."
+      qbo: "Payroll Summary by Employee → set date range to the single check date (e.g. 03/06–03/06) → export; repeat per check date."
+
+  ytd_balances:
+    checks:
+      - id: range-jan1-to-last-check
+        severity: fail
+        judge: >-
+          Range must be Jan 1 of the current year through facts.last_check_date
+          (the most recent payroll). A quarter-only or stale-through date fails.
+    remediation:
+      paychex: "All Reports → Employee Earnings Record → Create Report → All employees → range = start of calendar year → last payroll check date → Run → download."
+      paylocity: "Payroll Register Summary with YTD — Current Quarter + Prior Quarter exports (all Employee Status/Type selected)."
+      qbo: "Payroll Summary by Employee → range Jan 1 → last check date → export."
+
+  w2:
+    checks:
+      - id: prior-year
+        severity: fail
+        judge: "W-2s must be for the PRIOR calendar year (facts/current date minus 1)."
+
+  tax_return:
+    checks:
+      - id: quarter-required-and-finalized
+        severity: fail
+        judge: >-
+          The filing's quarter must be one of --required-quarters for today's
+          date, and that quarter must be fully ended (never accept an
+          in-progress quarter's filing).
+      - id: packet-combined
+        severity: warn
+        judge: "Quarterly packet should be one combined PDF, not scattered fragments."
+    companions:
+      - id: state-sui-filing
+        judge: "State Unemployment (SUI) filing for the same quarter must accompany the federal 941."
+      - id: state-sit-where-applicable
+        judge: "State Income Tax (SIT) filing too, where the state has one (per facts.states)."
+    conditionals:
+      - id: ia-ben-visible
+        when: "IA in facts.states"
+        judge: >-
+          Iowa Business E-File Number (BEN) — different from the FEIN — should
+          be visible on the quarterly filings. If clearly shown: no extra proof
+          needed. If not visible: spawn a requirement for BEN documentation.
+    remediation:
+      paychex: "Quick Reports → Payroll: Quarterly → check the most recent filing packet → Download → choose 'Combine them'."
+      paylocity: "Reports & Analytics → Quarterly & Year End → download the applicable Quarterly Filing."
+      qbo: "Taxes → Payroll Tax → Filings → Archive Forms and Filings → view + save the 941 and ALL state filings for that quarter."
+
+  tax_deposit:
+    checks:
+      - id: covers-quarter
+        severity: warn
+        judge: >-
+          Deposit/liability proof covers the payrolls of the required quarter
+          (or 'This Year' for QBO tax payments). Spot-check against expected
+          check dates.
+    remediation:
+      paychex: "All Reports → Cash Requirements → check all payrolls in the quarter → Download → Combine."
+      paylocity: "Reports → Statement of Filings and Deposits → select the applicable Year and Quarter → run → PDF."
+      qbo: "Reports → Payroll Tax Payments → date range 'This Year' → export PDF."
+
+  bank_proof:
+    checks:
+      - id: from-bank
+        severity: fail
+        judge: >-
+          Must come directly from the BANK: a voided check or bank statement.
+          Intuit/QuickBooks branding or trademark on the document = generated by
+          QuickBooks, not the bank → fail.
+      - id: usable
+        severity: warn
+        judge: >-
+          Routing and account numbers present? (▮▮▮ = present-but-masked by ADA
+          = fine.) Legible account holder / bank name?
+
+  time_off_accruals:
+    checks:
+      - id: asof-today
+        severity: warn
+        judge: "Balances should be as-of (approximately) today, with all fields exported."
+    remediation:
+      paychex: "All Reports → search 'Employee Data for Time Clocks' → Create Report 'PTO' → Layout: all fields → output xls."
+
+  company_info: {}          # QBO pull; common checks suffice
+  financial_statement: {}   # QBO pull; common checks suffice
+  chart_of_accounts: {}
+  journal_entries: {}
+  accounting_metadata: {}
+  earnings_setup: {}
+  deduction_setup: {}
+  tax_setup:
+    checks:
+      - id: ids-visible
+        severity: warn
+        judge: "Federal EIN + state withholding/SUI account numbers and rates visible (▮▮▮ = masked-by-ADA = present)?"
+  paystub: {}
+  payroll_summary: {}
+
+coverage:                   # cross-document — judge ONCE, after approvals, before packaging (Phase B.5)
+  - id: register-per-check-date
+    uses: expected-check-dates
+    judge: >-
+      Run validate.py --expected-check-dates with facts.payroll_frequency and
+      the anchor check date. Every expected check date in the required quarter
+      should have a corresponding approved register/report. Each missing date →
+      add a derived requirement ("Payroll register for check date YYYY-MM-DD")
+      so it lands in the gap report with exact instructions.
+  - id: deposits-cover-quarter
+    judge: "Approved deposit proof spans the same check dates as the registers."
+  - id: state-filings-companion
+    judge: "For every approved 941, the same quarter's SUI (and SIT where applicable) filing is also approved."
+  - id: dd-routing-present
+    when: "facts.dd_enrolled"
+    judge: >-
+      Routing + account info is available for direct-deposit employees. Some
+      provider reports include everything EXCEPT routing (e.g. OnPay/SurePayroll)
+      — if so, a companion doc (DD authorization forms, voided checks, bank
+      letters, or the provider's routing report) must be collected.
+  - id: conditional-artifacts
+    judge: >-
+      If facts.garnishments: garnishment court order(s) collected. If PTO is
+      tracked manually and transferring: the manual PTO tracker uploaded. Per
+      facts.states: DC/OK → SUI POA (completed or provided-to-complete);
+      OR → Oregon setup form + BIN. Any miss → derived requirement.

@@ -16,6 +16,8 @@ Actions:
   authorize_source   gate 1 — operator authorized a source/connector
   approve_document   gate 2 — operator approved a file; mints an approval token
   revoke             revoke a previously minted token
+  record_requirement per-client requirement w/ source provenance (Phase 0)
+  record_fact        intake fact (frequency, states, …) reused by validations
 
 Usage:
   ledger.py init      --ledger L --run-id R --client C --operator O --host H
@@ -162,6 +164,37 @@ def requirements(path):
     return list(out.values())
 
 
+def record_fact(path, key, value, source="operator"):
+    """Record an intake fact (payroll_frequency, last_check_date, states, …) in
+    the tamper-evident chain. Facts are captured once in Phase 0 and reused by
+    validation rules (validations.yaml) — no re-asking."""
+    return _append(path, "record_fact", key,
+                   {"key": key, "value": value, "source": source})
+
+
+def facts(path):
+    """{key: value} of recorded facts (last write per key wins)."""
+    out = {}
+    for e in _entries(path):
+        if e["action"] == "record_fact":
+            out[e["payload"]["key"]] = e["payload"]["value"]
+    return out
+
+
+def cmd_fact(a):
+    if a.list:
+        f = facts(a.ledger)
+        if not f:
+            print("(no facts recorded)")
+        for k, v in f.items():
+            print(f"{k:<24} {v}")
+        return
+    if not a.key or a.value == "":
+        sys.exit("fact requires --key and --value (or --list)")
+    e = record_fact(a.ledger, a.key, a.value, a.source)
+    print(f"recorded fact {a.key} = {a.value} (seq {e['seq']})")
+
+
 def cmd_requirement(a):
     e = record_requirement(a.ledger, a.req_id, a.text, a.source_kind,
                            a.source_ref, a.source_from, a.source_date,
@@ -247,6 +280,13 @@ def main():
     s.add_argument("--kind", default="collect", choices=["collect", "complete"])
     s.add_argument("--expected-doc-type", default="")
     s.add_argument("--expected-period", default="")
+
+    s = sub.add_parser("fact"); s.set_defaults(fn=cmd_fact)
+    s.add_argument("--ledger", required=True)
+    s.add_argument("--key", default="")
+    s.add_argument("--value", default="")
+    s.add_argument("--source", default="operator")
+    s.add_argument("--list", action="store_true", help="list recorded facts")
 
     s = sub.add_parser("tokens"); s.set_defaults(fn=cmd_tokens)
     s.add_argument("--ledger", required=True)
