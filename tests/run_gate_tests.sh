@@ -19,11 +19,12 @@ ok(){ echo "  PASS  $1"; pass=$((pass+1)); }
 no(){ echo "  FAIL  $1"; fail=$((fail+1)); }
 py(){ python3 "$ADA/scripts/$@"; }
 
-[ -f "$REPO/tests/fixtures/register_pass_q2.pdf" ] || python3 "$REPO/tests/make_fixtures.py" >/dev/null
+SRC="$REPO/tests/cases/R1/PayrollJournal_04012026-06302026.pdf"
+[ -f "$SRC" ] || python3 "$REPO/tests/make_fixtures.py" >/dev/null
 
 cd "$WORK"
 mkdir -p .ada drop
-cp "$REPO/tests/fixtures/register_pass_q2.pdf" drop/reg.pdf
+cp "$SRC" drop/PayrollJournal_04012026-06302026.pdf
 
 py ledger.py init --ledger ./.ada/l.jsonl --run-id GATE --client Acme \
   --operator op --host test >/dev/null
@@ -35,7 +36,7 @@ py pii_scan.py --candidates ./.ada/c.jsonl --update 2>/dev/null
 echo "gate regressions"
 
 # G1 — a failed validation cannot be approved without an explicit override.
-if py ledger.py approve --ledger ./.ada/l.jsonl --path ./drop/reg.pdf \
+if py ledger.py approve --ledger ./.ada/l.jsonl --path ./drop/PayrollJournal_04012026-06302026.pdf \
      --checklist-id 3c.payroll_register --validation fail \
      --validation-note "wrong quarter" >/dev/null 2>&1; then
   no "G1 approve refused on validation=fail without --override"
@@ -44,7 +45,7 @@ else
 fi
 
 # G2 — with --override it is approved AND the override is recorded.
-py ledger.py approve --ledger ./.ada/l.jsonl --path ./drop/reg.pdf \
+py ledger.py approve --ledger ./.ada/l.jsonl --path ./drop/PayrollJournal_04012026-06302026.pdf \
   --checklist-id 3c.payroll_register --validation fail \
   --validation-note "client confirms intentional" --override >/dev/null 2>&1
 if grep -q '"override": true' ./.ada/l.jsonl; then
@@ -54,7 +55,7 @@ else
 fi
 
 # G3 — a file changed after approval no longer matches its content hash.
-echo "TAMPERED" >> drop/reg.pdf
+echo "TAMPERED" >> drop/PayrollJournal_04012026-06302026.pdf
 py enumerate.py ./drop --connector paychex-export --out ./.ada/c.jsonl 2>/dev/null
 py package.py --ledger ./.ada/l.jsonl --candidates ./.ada/c.jsonl \
   --taxonomy "$ADA/taxonomy.yaml" --out ./pkg >/dev/null 2>&1
