@@ -1,0 +1,4 @@
+Jurisdiction,AccountNumber,Rate,EffectiveDate
+Federal EIN,00-1234567,,2019-09-09
+IL Withholding,00000-0000-0,4.95%,2019-09-09
+IL SUI,0000-0000-0,3.125%,2026-01-01
