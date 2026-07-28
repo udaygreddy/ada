@@ -1,0 +1,6 @@
+Name,SSN,DateOfBirth,HireDate,AnnualRate,HomeAddress,Email,Status
+Avery Nolan,000-11-2001,1988-03-14,2021-06-01,68000.00,"120 Main St, Springfield IL",avery@example.com,Active
+Blair Ozanne,000-11-2002,1992-11-02,2022-01-18,54500.00,"120 Main St, Springfield IL",blair@example.com,Active
+Casey Pruitt,000-11-2003,1979-07-27,2019-09-09,81250.00,"120 Main St, Springfield IL",casey@example.com,Active
+Devon Quill,000-11-2004,1995-02-05,2023-04-24,47000.00,"120 Main St, Springfield IL",devon@example.com,Active
+Emery Ruiz,000-11-2005,1990-08-30,2020-02-10,59000.00,"120 Main St, Springfield IL",emery@example.com,Terminated
