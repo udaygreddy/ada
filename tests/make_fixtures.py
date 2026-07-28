@@ -2,15 +2,17 @@
 """
 make_fixtures.py — generate the ADA validation test corpus.
 
-One folder per test case (`tests/cases/<CASE-ID>/`), each holding the
-document(s) a client would actually drop for that scenario. Filenames look like
-real payroll/accounting exports — NOT like test case names.
+One folder per test case (`tests/cases/<descriptive-case-name>/`), each holding
+the document(s) a client would actually drop for that scenario. Filenames look
+like real payroll/accounting exports — NOT like test case names.
 
 That is deliberate. If a fixture were called `register_fail_q1.pdf`, the model
 could "judge" it from the filename without reading a thing. Realistic names
 force the judgment to come from content, which is what we're actually testing.
-For the same reason the folder is just the case id (`R2`), never the answer.
-Expected verdicts live only in TEST-CASES.md.
+The folder name describes the scenario for human navigation (e.g.
+`payroll-register-prior-quarter`) but never states the verdict — no
+pass/fail/warn/good/bad in any folder name. Expected verdicts live only in
+TEST-CASES.md.
 
 All data is SYNTHETIC. SSNs use the 000- range the SSA never issues; EINs,
 account and routing numbers are invented; emails use example.com.
@@ -140,133 +142,133 @@ def pto(asof, accrued, used, balance):
 # Expected verdicts live in TEST-CASES.md, never here.
 CASES = {
     # ---- common checks ----
-    "C1": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
-    "C2": {"EmployeeEarningsRecord_01012026-06192026.pdf":
+    "common-doctype-and-period-match": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
+    "common-wrong-document-type": {"EmployeeEarningsRecord_01012026-06192026.pdf":
            earnings_record("01/01/2026", "06/19/2026")},
-    "C3": {"PayrollJournal_04102026.pdf": pdf([
+    "common-truncated-pages": {"PayrollJournal_04102026.pdf": pdf([
         "Payroll Journal - Acme Manufacturing LLC",
         "Check Date: 04/10/2026",
         "  Avery Nolan  000-11-2001  Gross 2,615.38",
         "--- page 1 of 6 --- REMAINING PAGES MISSING ---"])},
-    "C4": {"PayrollJournal_2026Q2.pdf": scanned_pdf()},
+    "common-scanned-image": {"PayrollJournal_2026Q2.pdf": scanned_pdf()},
 
     # ---- employee_masterfile ----
-    "M1": {"Employee_Master_File_20260720.csv": masterfile()},
-    "M2": {"Master_Control_by_Date_Range_20260720.csv":
+    "employee-masterfile-complete": {"Employee_Master_File_20260720.csv": masterfile()},
+    "employee-masterfile-masked-ssn": {"Master_Control_by_Date_Range_20260720.csv":
            masterfile(ssn_fmt=lambda e: "XXX-XX-" + e[1][-4:])},
-    "M3": {"EmployeeDetails.csv":
+    "employee-masterfile-missing-ssn-column": {"EmployeeDetails.csv":
            "Name,DateOfBirth,HireDate,AnnualRate,Status\n"
            + "".join("%s,%s,%s,%s,Active\n" % (e[0], e[2], e[3], e[4]) for e in EMPLOYEES)},
-    "M4": {"Employee_Census_20260720.csv": masterfile(include_terminated=False)},
-    "M5": {"Employee_List.csv":
+    "employee-masterfile-actives-only": {"Employee_Census_20260720.csv": masterfile(include_terminated=False)},
+    "employee-masterfile-minimal-fields": {"Employee_List.csv":
            "Name,SSN,Status\n"
            + "".join("%s,%s,Active\n" % (e[0], e[1]) for e in EMPLOYEES)
            + "".join("%s,%s,Terminated\n" % (e[0], e[1]) for e in TERMINATED)},
 
     # ---- payroll_register ----
-    "R1": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
-    "R2": {"PayrollJournal_01012026-03312026.pdf": register(Q1_CHECK_DATES)},
-    "R3": {"Payroll_Register_Summary_PXP_05082026.pdf":
+    "payroll-register-full-quarter": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
+    "payroll-register-prior-quarter": {"PayrollJournal_01012026-03312026.pdf": register(Q1_CHECK_DATES)},
+    "payroll-register-single-check-date": {"Payroll_Register_Summary_PXP_05082026.pdf":
            register(["05/08/2026"], title="Payroll Register Summary")},
-    "R4": {"Payroll_Register_Summary_ProcessDateRange.pdf": pdf([
+    "payroll-register-combined-range": {"Payroll_Register_Summary_ProcessDateRange.pdf": pdf([
         "Payroll Register Summary - Process Date Range",
         "Range: 04/01/2026 through 06/30/2026",
         "Combined multi-payroll export (6 payrolls in one file)",
         "Total Gross 62,769.12"])},
-    "R5": {"Payroll_Journal_2026Q2.pdf": scanned_pdf()},
+    "payroll-register-scanned-image": {"Payroll_Journal_2026Q2.pdf": scanned_pdf()},
 
     # ---- ytd_balances ----
-    "Y1": {"EmployeeEarningsRecord_01012026-06192026.pdf":
+    "ytd-balances-full-year": {"EmployeeEarningsRecord_01012026-06192026.pdf":
            earnings_record("01/01/2026", "06/19/2026")},
-    "Y2": {"EmployeeEarningsRecord_04012026-06192026.pdf":
+    "ytd-balances-quarter-only": {"EmployeeEarningsRecord_04012026-06192026.pdf":
            earnings_record("04/01/2026", "06/19/2026", label="Quarter", ytd=False)},
-    "Y3": {"EmployeeEarningsRecord_01012026-03202026.pdf":
+    "ytd-balances-stale-end-date": {"EmployeeEarningsRecord_01012026-03202026.pdf":
            earnings_record("01/01/2026", "03/20/2026")},
 
     # ---- w2 ----
-    "W1": {"W2_2025_Nolan_Avery.pdf": pdf([
+    "w2-prior-year": {"W2_2025_Nolan_Avery.pdf": pdf([
         "2025 Form W-2 Wage and Tax Statement",
         "Employer: Acme Manufacturing LLC  EIN 00-1234567",
         "Employee: Avery Nolan  SSN 000-11-2001",
         "1 Wages, tips, other compensation  68,000.00",
         "2 Federal income tax withheld  8,432.00"])},
-    "W2": {"W2_2023_Nolan_Avery.pdf": pdf([
+    "w2-two-years-old": {"W2_2023_Nolan_Avery.pdf": pdf([
         "2023 Form W-2 Wage and Tax Statement",
         "Employer: Acme Manufacturing LLC  EIN 00-1234567",
         "Employee: Avery Nolan  SSN 000-11-2001",
         "1 Wages, tips, other compensation  61,500.00"])},
 
     # ---- tax_return ----
-    "T1": {"Form941_2026Q2.pdf":
+    "tax-return-941-q2": {"Form941_2026Q2.pdf":
            form_941(2026, 2, "April, May, June", "Quarter ended 06/30/2026")},
-    "T2": {"Form941_2026Q3.pdf":
+    "tax-return-941-in-progress-quarter": {"Form941_2026Q3.pdf":
            form_941(2026, 3, "July, August, September",
                     "Quarter ending 09/30/2026",
                     note="IN PROGRESS - quarter not ended, not yet filed")},
-    "T3": {"Form941_2025Q3.pdf":
+    "tax-return-941-prior-year-quarter": {"Form941_2025Q3.pdf":
            form_941(2025, 3, "July, August, September", "Quarter ended 09/30/2025")},
-    "T4": {"IL_UI-3-40_2026Q2.pdf": pdf([
+    "tax-return-state-sui-q2": {"IL_UI-3-40_2026Q2.pdf": pdf([
         "Illinois Department of Employment Security",
         "Quarterly Contribution and Wage Report (Form UI-3/40)",
         "Quarter: 2nd Quarter 2026  Period ending 06/30/2026",
         "Account 0000-0000-0  Acme Manufacturing LLC",
         "Total wages 62,769.12  Contribution due 1,224.00"])},
-    "T5": {"Form941_2026Q2.pdf":
+    "tax-return-941-standalone": {"Form941_2026Q2.pdf":
            form_941(2026, 2, "April, May, June", "Quarter ended 06/30/2026")},
 
     # ---- tax_deposit ----
-    "D1": {"Statement_of_Filings_and_Deposits_2026Q2.pdf":
+    "tax-deposit-full-quarter": {"Statement_of_Filings_and_Deposits_2026Q2.pdf":
            deposits(2026, 2, Q2_CHECK_DATES)},
-    "D2": {"Statement_of_Filings_and_Deposits_2026Q1.pdf":
+    "tax-deposit-prior-quarter": {"Statement_of_Filings_and_Deposits_2026Q1.pdf":
            deposits(2026, 1, Q1_CHECK_DATES)},
 
     # ---- bank_proof ----
-    "B1": {"Voided_Check_FirstSpringfieldBank.pdf": pdf([
+    "bank-proof-voided-check": {"Voided_Check_FirstSpringfieldBank.pdf": pdf([
         "FIRST SPRINGFIELD BANK",
         "ACME MANUFACTURING LLC",
         "120 Main St, Springfield IL",
         "VOID  VOID  VOID",
         "Routing 000000518   Account 00000149772",
         "Member FDIC"])},
-    "B2": {"Direct_Deposit_Account_Summary.pdf": pdf([
+    "bank-proof-quickbooks-generated": {"Direct_Deposit_Account_Summary.pdf": pdf([
         "QuickBooks - Intuit Inc.",
         "Direct Deposit Account Summary",
         "ACME MANUFACTURING LLC",
         "Routing 000000518   Account 00000149772",
         "Generated by QuickBooks Online - Intuit trademark"])},
-    "B3": {"Voided_Check.pdf": pdf([
+    "bank-proof-redacted-numbers": {"Voided_Check.pdf": pdf([
         "FIRST SPRINGFIELD BANK",
         "ACME MANUFACTURING LLC",
         "VOID",
         "Routing ****     Account ****"])},
 
     # ---- time_off_accruals ----
-    "P1": {"Time_Off_Balances_20260720.csv": pto("2026-07-20", "80.00", "24.00", "56.00")},
-    "P2": {"Time_Off_Balances_20260131.csv": pto("2026-01-31", "40.00", "8.00", "32.00")},
+    "time-off-accruals-current": {"Time_Off_Balances_20260720.csv": pto("2026-07-20", "80.00", "24.00", "56.00")},
+    "time-off-accruals-stale-asof": {"Time_Off_Balances_20260131.csv": pto("2026-01-31", "40.00", "8.00", "32.00")},
 
     # ---- tax_setup ----
-    "S1": {"Company_Tax_Setup.csv":
+    "tax-setup-ids-visible": {"Company_Tax_Setup.csv":
            "Jurisdiction,AccountNumber,Rate,EffectiveDate\n"
            "Federal EIN,00-1234567,,2019-09-09\n"
            "IL Withholding,00000-0000-0,4.95%,2019-09-09\n"
            "IL SUI,0000-0000-0,3.125%,2026-01-01\n"},
-    "S2": {"Company_Tax_Setup_Export.csv":
+    "tax-setup-ids-on-file": {"Company_Tax_Setup_Export.csv":
            "Jurisdiction,AccountNumber,Rate,EffectiveDate\n"
            "Federal EIN,ON FILE,,2019-09-09\n"
            "IL Withholding,ON FILE,4.95%,2019-09-09\n"
            "IL SUI,ON FILE,3.125%,2026-01-01\n"},
 
     # ---- coverage (cross-document; folder = the whole approved set) ----
-    "V1": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
-    "V2": {"Payroll_Register_Summary_PXP_05082026.pdf":
+    "coverage-register-full-quarter": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
+    "coverage-register-single-date": {"Payroll_Register_Summary_PXP_05082026.pdf":
            register(["05/08/2026"], title="Payroll Register Summary")},
-    "V3": {"Form941_2026Q2.pdf":
+    "coverage-941-standalone": {"Form941_2026Q2.pdf":
            form_941(2026, 2, "April, May, June", "Quarter ended 06/30/2026")},
-    "V4": {"Employee_Master_File_20260720.csv": masterfile(),
+    "coverage-missing-dd-routing": {"Employee_Master_File_20260720.csv": masterfile(),
            "PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
-    "V5": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES),
+    "coverage-missing-garnishment-order": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES),
            "Employee_Master_File_20260720.csv": masterfile()},
-    "V6": {"Form941_2026Q2.pdf":
+    "coverage-missing-ia-ben": {"Form941_2026Q2.pdf":
            form_941(2026, 2, "April, May, June", "Quarter ended 06/30/2026"),
            "IA_65-5300_2026Q2.pdf": pdf([
                "Iowa Workforce Development",

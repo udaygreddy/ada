@@ -19,7 +19,7 @@ ok(){ echo "  PASS  $1"; pass=$((pass+1)); }
 no(){ echo "  FAIL  $1"; fail=$((fail+1)); }
 py(){ python3 "$ADA/scripts/$@"; }
 
-SRC="$REPO/tests/cases/R1/PayrollJournal_04012026-06302026.pdf"
+SRC="$REPO/tests/cases/payroll-register-full-quarter/PayrollJournal_04012026-06302026.pdf"
 [ -f "$SRC" ] || python3 "$REPO/tests/make_fixtures.py" >/dev/null
 
 cd "$WORK"
