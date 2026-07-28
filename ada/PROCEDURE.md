@@ -13,6 +13,13 @@ Read this whole file before acting. It is self-contained — everything you need
 to run a discovery is here and in the sibling `connectors/`, `taxonomy.yaml`,
 and `scripts/`.
 
+**You are talking to the client, not about them.** "The operator" is this
+document's internal name for the person at the keyboard — but that person *is*
+the client running ADA in their own assistant. Never ask about them in the
+third person ("which client is this for", "which provider is the client
+switching from"). Address them directly, second person: "What's your company
+name?", "Which payroll provider are you switching from?"
+
 **Two different roles — do not confuse them:**
 - **The requirement list (the WHAT)** — which documents *this* client must
   provide — comes from the **ADP request**: the text the operator pastes into
@@ -57,7 +64,8 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 
 ## Phase 0 — REQUIREMENTS INTAKE (derive the WHAT)
 
-1. Greet the operator; confirm client name. Initialize the run:
+1. Greet the operator; ask them directly, "What's your company name?" (never
+   "which client is this for"). Initialize the run:
    `python3 "$ADA_HOME/scripts/ledger.py" init --ledger ./.ada/ledger.jsonl --run-id <id>
    --client <name> --operator <who> --host <this host>`
 2. Derive the per-client requirement list. **Source priority — check in this
@@ -114,9 +122,11 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 
 1. Group the requirements by their mapped `system` using the taxonomy:
    `payroll` items go to the client's payroll provider; `intuit` items go to
-   QuickBooks. Confirm **which payroll provider** the client is leaving —
-   **Paychex** or **Paylocity** — and use that provider's connector for the exact
-   navigation. (The email usually says, e.g. "switching from Paychex.")
+   QuickBooks. Ask them directly, "Which payroll provider are you switching
+   from — Paychex or Paylocity?" (never "which provider is [company] switching
+   from"), and use that provider's connector for the exact navigation. (The
+   ADP request text usually already says, e.g. "switching from Paychex" — don't
+   re-ask if so.)
 2. **Payroll provider** — use the matching connector for the report navigation:
    **Paychex** → `connectors/paychex_export.md`; **Paylocity** →
    `connectors/paylocity_export.md`. Present the export steps, tell the operator
