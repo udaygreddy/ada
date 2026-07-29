@@ -25,7 +25,20 @@ script-asserted — see [`run_gate_tests.sh`](run_gate_tests.sh).)
   `last_check_date=2026-06-19`, `active_employee_count=4`,
   `states=[IL]`, `dd_enrolled=true`, `garnishments=false`.
 
-## How to run one case
+## How to run one case — end to end, as a client would
+
+Print the case's sample client message and paste it into a host with the skill
+installed:
+
+```sh
+python3 tests/make_prompts.py payroll-register-prior-quarter
+```
+
+All 39 are in [`PROMPTS.md`](PROMPTS.md). They carry the company name, ADP
+request, provider, drop folder and reference date — and never the expected
+verdict, so you can run blind and check the Expect column afterwards.
+
+## How to run one case — validation step only
 
 ```sh
 python3 ada/scripts/validate.py --extract \
