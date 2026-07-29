@@ -1,12 +1,32 @@
 %PDF-1.4
-1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
-2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
-3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj
-4 0 obj << /Filter /FlateDecode /Length 241 >>
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Filter /FlateDecode /Length 258 >>
 stream
-xœĞËnƒ0…áW9ËTâb›[Ú]BÒªRJIÊXdBiÁ®Œ‰DŸ¾–¢¨,ÙzüÍHÿ¶BøÌÁªV¥œŒî:œ¨iKcßK3ÁÇ¦î	oRYÛÑ´ªÁá? úÂjÿZ€1Ÿ‹(NÒìö–Rı´ô–„l
-&ÒÛØ\Ém-t'u–û‚1¼=^Ê“ ZYpï1A–ñ;ßv²5xÿ•JÑÜ‹…>—M(ÍØZ;÷ÑB¿£«V8­k5ãñB^’iõ•¶²»Î¼8åA"nŸNô£ECŠŒkx†»Ç2×ğ?ã¾úntÅ
+xœ•ĞMNÃ0à}Nñ– 5©í8Ia×?R	¡øV;-ÄFS)œ	µ«®çÍ7£·PÑôƒ3¨C”1R@í£›JÎ6¶t¬;Oo}Ûj7 Æ|×µézç{W›#6›å-ÔGÄsù»¿~*ÁXÌE*³¼8.ßi÷‰•öt–MÙl*˜ÈÏBÀüDá`im° ñX0ÆGg»b’ó,Ig@I|r'ERüÂY4ºvxùÖÆĞ×BKİÑ€Êõµ÷c(½ZÑÉ¼öuhxäÈkŠ\m÷PÖëæo—³‰Ìy’‰³ô–¾¬ó8’!šß#|ÀŠĞüùkõw†ƒ÷
 endstream
 endobj
-5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000571 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+641
 %%EOF

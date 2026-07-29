@@ -35,33 +35,82 @@ Q1_CHECK_DATES = ["01/09/2026", "01/23/2026", "02/06/2026", "02/20/2026",
                   "03/06/2026", "03/20/2026"]
 
 
-def pdf(lines, compress=True):
-    """Minimal one-page PDF whose text lives in a content stream."""
-    body = " ".join("(%s) Tj" % l.replace("(", "").replace(")", "") for l in lines)
-    cs = ("BT /F1 10 Tf " + body + " ET").encode("latin-1", "replace")
-    stream = zlib.compress(cs) if compress else cs
+PAGE_W, PAGE_H = 612, 792          # US Letter, in points
+MARGIN_X, TOP_Y, LINE_H = 50, 742, 14
+MAX_LINES = int((TOP_Y - 50) / LINE_H)
+
+
+def _assemble(objs):
+    """Assemble numbered objects into a structurally valid PDF.
+
+    Real viewers (Preview, Adobe, Chrome) need more than the objects: a cross-
+    reference table with exact byte offsets, a trailer naming the catalog, and
+    a startxref pointer. Without them the file opens in nothing — even though a
+    stream-scanning extractor can still read it.
+    """
+    out = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for i, body in enumerate(objs, start=1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % i + body + b"\nendobj\n"
+    xref_at = len(out)
+    out += b"xref\n0 %d\n" % (len(objs) + 1)
+    out += b"0000000000 65535 f \n"
+    for off in offsets:
+        out += b"%010d 00000 n \n" % off
+    out += (b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n"
+            % (len(objs) + 1, xref_at))
+    return bytes(out)
+
+
+def _content_obj(stream, compress):
+    data = zlib.compress(stream) if compress else stream
     filt = b"/Filter /FlateDecode " if compress else b""
-    return (b"%PDF-1.4\n"
-            b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n"
-            b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
-            b"3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R "
-            b"/Resources << /Font << /F1 5 0 R >> >> >> endobj\n"
-            b"4 0 obj << " + filt + b"/Length " + str(len(stream)).encode() + b" >>\n"
-            b"stream\n" + stream + b"\nendstream\nendobj\n"
-            b"5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n"
-            b"%%EOF\n")
+    return (b"<< " + filt + b"/Length " + str(len(data)).encode() + b" >>\n"
+            b"stream\n" + data + b"\nendstream")
+
+
+def _esc(s):
+    return s.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
+
+
+def pdf(lines, compress=True):
+    """One-page PDF with real, positioned text — opens in any PDF viewer."""
+    if len(lines) > MAX_LINES:
+        raise ValueError("%d lines overflows one page (max %d)"
+                         % (len(lines), MAX_LINES))
+    ops = ["BT", "/F1 10 Tf", "%d %d Td" % (MARGIN_X, TOP_Y)]
+    for n, line in enumerate(lines):
+        if n:
+            ops.append("0 -%d Td" % LINE_H)
+        ops.append("(%s) Tj" % _esc(line))
+    ops.append("ET")
+    cs = "\n".join(ops).encode("latin-1", "replace")
+    return _assemble([
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> >> >>" % (PAGE_W, PAGE_H),
+        _content_obj(cs, compress),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ])
 
 
 def scanned_pdf():
-    """PDF with no text operators — stands in for an image-only scan."""
-    cs = b"q 612 0 0 792 0 0 cm /Im0 Do Q"
-    stream = zlib.compress(cs)
-    return (b"%PDF-1.4\n"
-            b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n"
-            b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n"
-            b"3 0 obj << /Type /Page /Parent 2 0 R /Contents 4 0 R >> endobj\n"
-            b"4 0 obj << /Filter /FlateDecode /Length " + str(len(stream)).encode() + b" >>\n"
-            b"stream\n" + stream + b"\nendstream\nendobj\n%%EOF\n")
+    """Valid page carrying no text operators — stands in for an image-only scan.
+
+    Opens and renders (a grey block, like a scan) but yields zero extractable
+    text, which is the condition the scanned-document cases exercise.
+    """
+    cs = (b"q 0.93 g %d %d %d %d re f Q"
+          % (MARGIN_X, 60, PAGE_W - 2 * MARGIN_X, PAGE_H - 120))
+    return _assemble([
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] /Contents 4 0 R "
+        b"/Resources << >> >>" % (PAGE_W, PAGE_H),
+        _content_obj(cs, True),
+    ])
 
 
 EMPLOYEES = [
