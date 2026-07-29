@@ -64,8 +64,17 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 
 ## Phase 0 — REQUIREMENTS INTAKE (derive the WHAT)
 
-1. Greet the operator; ask them directly, "What's your company name?" (never
-   "which client is this for"). Initialize the run:
+1. Greet them and ask directly, "What's your company name?" (never "which client
+   is this for"). `ledger.py init` needs three more values — **derive these
+   yourself; never interrogate the client for them**:
+   - `--run-id`: generate it, e.g. `acme-20260720` (company slug + today).
+     Never ask "what run ID should I use?" — that is meaningless to a client.
+   - `--operator`: the person you are talking to. Use their name if they have
+     given it or the host exposes it; otherwise record `client-operator`. Never
+     ask "who is the operator?" — that is internal jargon.
+   - `--host`: the assistant you are running in (e.g. `claude-cowork`,
+     `copilot`). You know this; don't ask.
+
    `python3 "$ADA_HOME/scripts/ledger.py" init --ledger ./.ada/ledger.jsonl --run-id <id>
    --client <name> --operator <who> --host <this host>`
 2. Derive the per-client requirement list. **Source priority — check in this

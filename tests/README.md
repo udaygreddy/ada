@@ -5,6 +5,7 @@ Two kinds of test, because ADA has two kinds of behavior.
 | | What it checks | How it runs |
 |---|---|---|
 | [`TEST-CASES.md`](TEST-CASES.md) | **Document validation** — positive and negative cases per document type | Judged by the model; compare its verdict to the expected column |
+| [`PROMPTS.md`](PROMPTS.md) | **Ready-to-paste client messages** — one per case | Paste into a host with the skill installed, then check the verdict |
 | [`run_gate_tests.sh`](run_gate_tests.sh) | **Code-enforced gates** — consent, hash binding, ledger integrity | Asserted by script; exits non-zero on failure |
 
 The split mirrors the architecture: judgment is the model's job and can't be
@@ -15,10 +16,25 @@ never regress.
 
 ```sh
 python3 tests/make_fixtures.py     # writes tests/cases/ (39 folders, 42 files)
+python3 tests/make_prompts.py      # writes tests/PROMPTS.md (39 client messages)
 tests/run_gate_tests.sh            # code-enforced regressions — should be all PASS
 ```
 
 Then walk [`TEST-CASES.md`](TEST-CASES.md) for the judgment cases.
+
+## End-to-end, through a real host
+
+To exercise a case the way a client would, print its prompt and paste it into
+Claude (or any host with `adp-discovery` installed):
+
+```sh
+python3 tests/make_prompts.py payroll-register-prior-quarter
+```
+
+The prompt carries the company name, the ADP request, the payroll provider, the
+drop folder and the reference date — everything Phase 0 and Phase A need — and
+**never** the expected verdict. Check the skill's answer against
+[`TEST-CASES.md`](TEST-CASES.md) afterwards.
 
 ## Case folders
 
