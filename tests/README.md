@@ -15,8 +15,8 @@ never regress.
 ## Run
 
 ```sh
-python3 tests/make_fixtures.py     # writes tests/cases/ (39 folders, 42 files)
-python3 tests/make_prompts.py      # writes tests/PROMPTS.md (39 client messages)
+python3 tests/make_fixtures.py     # writes tests/cases/ (42 folders, 45 files)
+python3 tests/make_prompts.py      # writes tests/PROMPTS.md (42 client messages)
 tests/run_gate_tests.sh            # code-enforced regressions — should be all PASS
 ```
 

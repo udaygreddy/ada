@@ -307,6 +307,22 @@ CASES = {
            "IL Withholding,ON FILE,4.95%,2019-09-09\n"
            "IL SUI,ON FILE,3.125%,2026-01-01\n"},
 
+    # ---- explicit constraints stated in the ADP request ----
+    # Fine by the standing rules in validations.yaml; they violate only what ADP
+    # wrote in this client's request. Nothing in the file betrays that — the
+    # constraint lives on the requirement, not in the document.
+    "explicit-format-csv-when-pdf-required": {
+        "Payroll_Register_Q2_2026.csv":
+            "employee,check_date,gross,net\n"
+            + "".join("%s,%s,2615.38,1942.77\n" % (e[0], d)
+                      for d in Q2_CHECK_DATES for e in EMPLOYEES)},
+    "explicit-combined-when-per-date-required": {
+        "Payroll_Register_Q2_2026_AllChecks.pdf": register(
+            Q2_CHECK_DATES, title="Payroll Register Summary - All Check Dates")},
+    "explicit-daterange-narrower-than-supplied": {
+        "EmployeeEarningsRecord_01012026-06192026.pdf":
+            earnings_record("01/01/2026", "06/19/2026")},
+
     # ---- coverage (cross-document; folder = the whole approved set) ----
     "coverage-register-full-quarter": {"PayrollJournal_04012026-06302026.pdf": register(Q2_CHECK_DATES)},
     "coverage-register-single-date": {"Payroll_Register_Summary_PXP_05082026.pdf":

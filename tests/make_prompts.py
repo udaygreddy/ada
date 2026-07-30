@@ -307,6 +307,36 @@ ADP requested our company tax setup with the account numbers and rates.
 Export: {folder}
 Today is {ref}."""),
 
+  # ---------- explicit constraints stated in the ADP request ----------
+  "explicit-format-csv-when-pdf-required": ("ADP said PDF; client sent CSV", """\
+{co}, switching from Paychex to ADP.
+
+ADP's email says, word for word:
+  "Payroll registers for last quarter. PDF format only, please — our
+   intake system can't read spreadsheets."
+
+Here's my export: {folder}
+Today is {ref}. Biweekly payroll, last check 06/19/2026."""),
+
+  "explicit-combined-when-per-date-required": ("ADP said one file per check date; client combined", """\
+We're {co}, moving from Paylocity to ADP.
+
+ADP wrote:
+  "Payroll registers for last quarter — one file per check date, please do
+   not combine them into a single report."
+
+My export is here: {folder}
+Today is {ref}. Biweekly, first check 04/10/2026, last 06/19/2026."""),
+
+  "explicit-daterange-narrower-than-supplied": ("ADP gave an explicit range; file is wider", """\
+{co} here, switching from Paychex to ADP.
+
+ADP's request states:
+  "Employee earnings record covering 04/01/2026 through 06/30/2026."
+
+File: {folder}
+Today is {ref}. Last payroll was 06/19/2026."""),
+
   # ---------- coverage (Phase B.5) ----------
   "coverage-register-full-quarter": ("registers covering every check date", """\
 {co}, switching from Paychex to ADP.
