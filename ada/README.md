@@ -7,6 +7,9 @@ ADP needs — **without any ADP person accessing the client's systems**.
 Supported systems: **Paychex** and **Paylocity** (payroll — guided export) and
 **Intuit QuickBooks** (accounting/GL — read-only).
 
+> Engineering onboarding: [`../ARCHITECTURE.md`](../ARCHITECTURE.md) — invariants,
+> decision records, extension points, and known weaknesses.
+
 ## Two roles: requirements vs. taxonomy
 
 - **Requirements (the WHAT)** — which documents *this* client must provide — are

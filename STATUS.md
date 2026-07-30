@@ -2,6 +2,9 @@
 
 **ADP Discovery Agent** · prepared 2026-07-27 · owner: Uday Gangireddy
 
+*Engineering counterpart: [`ARCHITECTURE.md`](ARCHITECTURE.md) — decision
+records, invariants, and known weaknesses.*
+
 ---
 
 ## Bottom line
