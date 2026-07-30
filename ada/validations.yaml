@@ -1,5 +1,25 @@
 # ADA validation rules — architected BY DOCUMENT TYPE.
 #
+# TWO TIERS OF ACCEPTANCE CRITERIA — judge BOTH for every document:
+#
+#   1. EXPLICIT — what ADP stated in THIS client's request ("PDF format only",
+#      "must cover 04/01/2026-06/30/2026", "one file per check date", "signed
+#      copy", "last two quarters"). Captured verbatim in Phase 0 onto the
+#      requirement as `explicit_constraints`, so the check traces back to ADP's
+#      own words. These vary per client and per request.
+#   2. IMPLICIT — the standing rules in this file, mined from ADP's onboarding
+#      guide. These apply whether or not the request mentions them (ADP always
+#      needs unmasked SSNs, a finalized quarter, bank-issued proof).
+#
+#   Precedence: ADDITIVE, never subtractive. An explicit constraint can only
+#   TIGHTEN what's acceptable. A request that says "PDF is fine" does NOT waive
+#   `ssn-unmasked`. If an explicit constraint appears to contradict a standing
+#   rule, surface it to the operator rather than silently dropping either.
+#
+#   Evidence for explicit format constraints: `validate.py --extract` returns
+#   `file_format` with the extension AND the magic-byte type, plus whether they
+#   agree — a file named .pdf that isn't a PDF is caught there.
+#
 # How this file is used (PROCEDURE Phase B / B.5):
 #   Every check is judged by YOU, the model running in the client's assistant —
 #   never by a script. Formats and layouts vary too much for regex; you read the

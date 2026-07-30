@@ -263,6 +263,50 @@ Export: /Users/udayg/Documents/projects/ADA/tests/cases/employee-masterfile-miss
 Today is 2026-07-20.
 ```
 
+## `explicit-combined-when-per-date-required`
+
+_ADP said one file per check date; client combined_
+
+```text
+We're Acme Manufacturing LLC, moving from Paylocity to ADP.
+
+ADP wrote:
+  "Payroll registers for last quarter — one file per check date, please do
+   not combine them into a single report."
+
+My export is here: /Users/udayg/Documents/projects/ADA/tests/cases/explicit-combined-when-per-date-required
+Today is 2026-07-20. Biweekly, first check 04/10/2026, last 06/19/2026.
+```
+
+## `explicit-daterange-narrower-than-supplied`
+
+_ADP gave an explicit range; file is wider_
+
+```text
+Acme Manufacturing LLC here, switching from Paychex to ADP.
+
+ADP's request states:
+  "Employee earnings record covering 04/01/2026 through 06/30/2026."
+
+File: /Users/udayg/Documents/projects/ADA/tests/cases/explicit-daterange-narrower-than-supplied
+Today is 2026-07-20. Last payroll was 06/19/2026.
+```
+
+## `explicit-format-csv-when-pdf-required`
+
+_ADP said PDF; client sent CSV_
+
+```text
+Acme Manufacturing LLC, switching from Paychex to ADP.
+
+ADP's email says, word for word:
+  "Payroll registers for last quarter. PDF format only, please — our
+   intake system can't read spreadsheets."
+
+Here's my export: /Users/udayg/Documents/projects/ADA/tests/cases/explicit-format-csv-when-pdf-required
+Today is 2026-07-20. Biweekly payroll, last check 06/19/2026.
+```
+
 ## `payroll-register-combined-range`
 
 _combined multi-payroll range_

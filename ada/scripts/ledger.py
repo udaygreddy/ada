@@ -131,7 +131,8 @@ def valid_tokens(path):
 def record_requirement(path, req_id, requested_text, source_kind="email",
                        source_ref="", source_from="", source_date="",
                        mapped_taxonomy_id="", kind="collect",
-                       expected_doc_type="", expected_period=""):
+                       expected_doc_type="", expected_period="",
+                       explicit_constraints=None):
     """Append a per-client requirement (the WHAT for this client), derived from
     an ADP request source. The requirement list comes from the source; the
     taxonomy only supplies HOW/WHERE once `mapped_taxonomy_id` is set.
@@ -139,6 +140,14 @@ def record_requirement(path, req_id, requested_text, source_kind="email",
     source_kind: email (default) | salesforce-case (future MCP) | manual
     source_ref:  email thread id / Salesforce case id
     kind:        collect (gather a file) | complete (fill a blank ADP form)
+
+    explicit_constraints: acceptance criteria ADP stated IN THIS REQUEST —
+    "PDF format only", "must cover 04/01/2026-06/30/2026", "one file per check
+    date". Recorded verbatim so the check is auditable back to ADP's own words.
+    These are judged IN ADDITION to the standing rules in validations.yaml, and
+    are additive only: an explicit constraint can tighten what's acceptable,
+    never waive a standing rule.
+
     Provenance is kept inside the tamper-evident ledger."""
     payload = {
         "req_id": req_id,
@@ -151,6 +160,7 @@ def record_requirement(path, req_id, requested_text, source_kind="email",
         "kind": kind,
         "expected_doc_type": expected_doc_type,
         "expected_period": expected_period,
+        "explicit_constraints": list(explicit_constraints or []),
     }
     return _append(path, "record_requirement", req_id, payload)
 
@@ -199,9 +209,12 @@ def cmd_requirement(a):
     e = record_requirement(a.ledger, a.req_id, a.text, a.source_kind,
                            a.source_ref, a.source_from, a.source_date,
                            a.taxonomy_id, a.kind,
-                           a.expected_doc_type, a.expected_period)
+                           a.expected_doc_type, a.expected_period,
+                           a.constraint)
+    n = len(a.constraint or [])
     print(f"recorded requirement {a.req_id} (seq {e['seq']}) "
-          f"-> {a.taxonomy_id or '(ad-hoc)'}  [{a.kind}]  via {a.source_kind}")
+          f"-> {a.taxonomy_id or '(ad-hoc)'}  [{a.kind}]  via {a.source_kind}"
+          + (f"  +{n} explicit constraint(s)" if n else ""))
 
 
 def cmd_tokens(a):
@@ -280,6 +293,9 @@ def main():
     s.add_argument("--kind", default="collect", choices=["collect", "complete"])
     s.add_argument("--expected-doc-type", default="")
     s.add_argument("--expected-period", default="")
+    s.add_argument("--constraint", action="append", default=[],
+                   metavar="TEXT", help="explicit acceptance criterion stated "
+                   "in the ADP request, verbatim (repeatable)")
 
     s = sub.add_parser("fact"); s.set_defaults(fn=cmd_fact)
     s.add_argument("--ledger", required=True)

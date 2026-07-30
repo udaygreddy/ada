@@ -15,7 +15,7 @@ Expect column is the verdict a correct judgment produces. Use them after a rules
 change, a prompt change, or a model upgrade. (The code-enforced gates *are*
 script-asserted — see [`run_gate_tests.sh`](run_gate_tests.sh).)
 
-- **Generate:** `python3 tests/make_fixtures.py` → 39 folders, 42 files. All
+- **Generate:** `python3 tests/make_fixtures.py` → 42 folders, 45 files. All
   synthetic; SSNs use the SSA-invalid `000-` range, emails use `example.com`.
 - **Reference date: `2026-07-20`.** Mid-late July, so per ADP's quarterly timing
   **Q2 2026 is required** and **Q1 2026 is the fallback**. Pass the same
@@ -34,7 +34,7 @@ installed:
 python3 tests/make_prompts.py payroll-register-prior-quarter
 ```
 
-All 39 are in [`PROMPTS.md`](PROMPTS.md). They carry the company name, ADP
+All 42 are in [`PROMPTS.md`](PROMPTS.md). They carry the company name, ADP
 request, provider, drop folder and reference date — and never the expected
 verdict, so you can run blind and check the Expect column afterwards.
 
@@ -157,6 +157,31 @@ To exercise a whole case folder as a drop folder (Phase A ingest), point
 |---|---|---|---|---|
 | `tax-setup-ids-visible` | `Company_Tax_Setup.csv` | EIN + IL withholding/SUI accounts and rates | `ids-visible` | **pass** |
 | `tax-setup-ids-on-file` | `Company_Tax_Setup_Export.csv` | Account numbers literally `ON FILE` | `ids-visible` | **warn** |
+
+## explicit constraints — stated by ADP in the request
+
+These documents **pass every standing rule** in `validations.yaml`. They fail
+only against what ADP wrote in this client's own request, captured in Phase 0 as
+the requirement's `explicit_constraints`. Nothing in the file reveals the
+constraint — it lives on the requirement, so the skill must carry it forward
+from the email/pasted text to the validation step.
+
+The prompt for each case quotes ADP's wording verbatim.
+
+| Case | Document | ADP's stated criterion | Expect |
+|---|---|---|---|
+| `explicit-format-csv-when-pdf-required` | `Payroll_Register_Q2_2026.csv` | "PDF format only" | **fail** — content is right, format isn't. `file_format` reports `magic: text/csv` |
+| `explicit-combined-when-per-date-required` | `Payroll_Register_Q2_2026_AllChecks.pdf` | "one file per check date, do not combine" | **fail** — one file spans all 6 check dates |
+| `explicit-daterange-narrower-than-supplied` | `EmployeeEarningsRecord_01012026-06192026.pdf` | "covering 04/01/2026 through 06/30/2026" | **fail** — file runs 01/01–06/19, wider than asked |
+
+> **Precedence is additive, never subtractive.** An explicit constraint can only
+> tighten what's acceptable. A request saying "PDF is fine" must never be read
+> as waiving `ssn-unmasked`. A good run reports the violated constraint
+> *verbatim* rather than paraphrasing it.
+>
+> Note the last case is genuinely arguable — a wider date range may or may not
+> be acceptable. The right behaviour is to flag the mismatch against ADP's
+> stated range and let the operator decide, not to silently accept it.
 
 ## coverage — cross-document (Phase B.5)
 

@@ -30,13 +30,15 @@ def cmd_add(a):
     e = ledger_mod.record_requirement(
         a.ledger, a.req_id, a.text, a.source_kind, a.source_ref,
         a.source_from, a.source_date, a.taxonomy_id, a.kind,
-        a.expected_doc_type, a.expected_period)
+        a.expected_doc_type, a.expected_period, a.constraint)
     rec = e["payload"]
     rec["ledger_seq"] = e["seq"]
     if a.reqs:
         _ada.append_jsonl(a.reqs, rec)
+    n = len(a.constraint or [])
     print(f"added requirement {a.req_id} -> {a.taxonomy_id or '(ad-hoc)'}  "
-          f"[{a.kind}]  via {a.source_kind}  (seq {e['seq']})")
+          f"[{a.kind}]  via {a.source_kind}  (seq {e['seq']})"
+          + (f"  +{n} explicit constraint(s)" if n else ""))
 
 
 def cmd_list(a):
@@ -71,6 +73,9 @@ def main():
                    help="canonical doc_type from the mapped taxonomy item")
     s.add_argument("--expected-period", default="",
                    help='period phrase from requested_text, e.g. "last quarter"')
+    s.add_argument("--constraint", action="append", default=[], metavar="TEXT",
+                   help="explicit acceptance criterion ADP stated in this "
+                        "request, verbatim (repeatable)")
 
     s = sub.add_parser("list"); s.set_defaults(fn=cmd_list)
     s.add_argument("--ledger", required=True)
