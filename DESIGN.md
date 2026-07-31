@@ -237,4 +237,7 @@ Running ADA for a sample small-business client:
    a mismatch (wrong quarter/type) blocks approval unless the operator overrides.
 5. Produces a staging folder where **every file traces to a ledger approval
    token** and carries its validation verdict, plus `manifest.json`, a gap report
-   (incl. the COA gap and a validation summary), and a hash-chained ledger.
+   (incl. the COA gap and a validation summary), and a hash-chained ledger. The
+   run records the **skill + ruleset version** that screened it (from `ada/VERSION`
+   + `validations.yaml`), so a package always traces to an exact build — bump
+   `ruleset_version` when validations change, `VERSION` when documents/scripts do.

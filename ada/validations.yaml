@@ -50,7 +50,7 @@
 #   Add per-provider `remediation` text if the fix is a re-export. Bump
 #   ruleset_version. No code or procedure changes needed.
 
-ruleset_version: 1
+ruleset_version: 2
 
 common:                     # judged for EVERY document
   - id: matches-request

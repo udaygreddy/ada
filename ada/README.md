@@ -28,9 +28,16 @@ classifying documents. Bundled **scripts do the controls** — so consent and au
 don't depend on the model behaving:
 
 - `scripts/ledger.py` — append-only, **hash-chained** consent ledger. Records
-  source authorizations (gate 1), per-document approvals (gate 2), and per-client
-  **requirements** with their source-email provenance. Each approval mints a
-  token bound to the file's content hash.
+  source authorizations (gate 1), per-document approvals (gate 2), per-client
+  **requirements** with source provenance, and intake facts. `init` stamps the
+  **skill version** (`ada/VERSION`) + **ruleset version** (`validations.yaml`)
+  into the run, so every package records exactly which build screened it. Each
+  approval mints a token bound to the file's content hash.
+- `VERSION` — canonical skill version (semver). Bump when scripts/procedure/
+  taxonomy/connectors change or a **new document type** is added; bump
+  `ruleset_version` in `validations.yaml` when **validations** change. Both are
+  recorded per run/package, and `build-plugin.sh` version-stamps every artifact
+  (filenames + a `BUILD_INFO.json` inside the bundle).
 - `scripts/requirements.py` — record/list the per-client requirements derived
   from the ADP request source (email now, Salesforce Case later).
 - `scripts/enumerate.py` — lists + SHA-256 hashes candidate files.

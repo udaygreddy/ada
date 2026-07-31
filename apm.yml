@@ -2,7 +2,7 @@
 # Publishing: this repo IS the package. Push to the git remote; consumers run
 #   apm install udaygreddy/ada --target claude   (or copilot, cursor, codex, …)
 name: adp-discovery
-version: 0.1.0
+version: 0.2.0
 description: >-
   Use when a client needs to collect the onboarding documents ADP requested,
   from their own systems, without ADP accessing them: derives the required-
