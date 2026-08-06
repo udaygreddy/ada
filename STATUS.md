@@ -7,6 +7,27 @@ records, invariants, and known weaknesses.*
 
 ---
 
+## Legal approval
+
+**Approved.** Covers both questions that were bundled into the ask:
+
+1. ADP-authored scripts executing inside client environments.
+2. The client's assistant calling an **ADP-operated policy endpoint**
+   (the pull-only MCP — see [`MCP-DESIGN.md`](MCP-DESIGN.md), ADR-009).
+
+This clears what was the longest-lead item in the programme. The secure handoff
+channel is now the top blocker.
+
+> **⚠ Conditions are not yet recorded.** Approvals of this kind normally carry
+> constraints — client-reviewable source, no client data egress, disclosure,
+> retention limits. Any such conditions must be written down here and, wherever
+> they are testable, encoded as invariants in
+> [`ARCHITECTURE.md`](ARCHITECTURE.md) §3 with a test that fails when violated —
+> the way pull-only is enforced in `ada-policy-service`. A condition that lives
+> only in an approval email is a condition that gets violated in six months.
+
+---
+
 ## Bottom line
 
 ADA works end to end as a **functioning prototype**, and its core architectural
@@ -74,8 +95,8 @@ Being precise about this matters more than the feature list.
 
 | # | Risk | Impact | Status |
 |---|---|---|---|
-| 1 | **Legal**: ADP-authored scripts running on client data may count as access-by-proxy | Could invalidate the entire premise | Ruling never requested |
-| 2 | **Secure handoff**: final package (W-2s, SSNs, bank proof) has no defined transmission channel | Weakest link undoes every upstream control | Undesigned |
+| 1 | **Secure handoff**: final package (W-2s, SSNs, bank proof) has no defined transmission channel | Weakest link undoes every upstream control | **Now the top blocker** — undesigned |
+| 2 | ~~**Legal**: ADP-authored scripts as access-by-proxy~~ | — | ✅ **APPROVED** — covers both client-side scripts *and* the client's assistant calling an ADP policy endpoint. **Conditions attached to the approval are not yet recorded here — see §Legal approval** |
 | 3 | **Zero field validation** | Click-paths and value claim may not survive contact with a real client | Not started |
 | 4 | **Windows** | Most clients are Windows; scripts assume `python3` and bash-style paths | Known, deferred |
 | 5 | **No CI** | Controls are the product's credibility and nothing guards them per-change | Tests exist; automation doesn't |
@@ -92,9 +113,9 @@ Four phases. Phase 1 is sequential; later phases can overlap.
 ### Phase 1 — Make it real (unblocks everything)
 *Target: one successful onboarding with a friendly client.*
 
-- **Obtain the legal ruling** on ADP-authored scripts. Likely constraints:
-  dependency-free, client-reviewable source (already true), possibly third-party
-  attestation. **Nothing else should be built until this is answered.**
+- ~~**Obtain the legal ruling**~~ — ✅ **done, approved.** Covers both
+  ADP-authored scripts running client-side and the client's assistant calling
+  an ADP-operated policy endpoint. See §Legal approval below.
 - **Design the secure handoff** — encryption at rest, transmission mechanism,
   package integrity ADP can verify on receipt, and post-transmission cleanup.
   Likely reuses an existing ADP secure-upload portal.
@@ -146,8 +167,8 @@ Four phases. Phase 1 is sequential; later phases can overlap.
 
 | # | Decision | Blocks |
 |---|---|---|
-| 1 | Legal ruling: may ADP-authored scripts execute in client environments? | All further investment |
-| 2 | Who owns the secure handoff channel — reuse an existing ADP portal? | Any real PII collection |
+| 1 | ~~Legal ruling~~ | ✅ **Resolved — approved**, both scripts and the MCP endpoint |
+| 2 | Who owns the secure handoff channel — reuse an existing ADP portal? | **Now the top blocker.** Any real PII collection |
 | 3 | Approve a 1–2 client pilot and provide tenant access for verification | Field validation |
 | 4 | Which team owns the ruleset, releases and support escalation | Phase 2 onward |
 | 5 | Repo home and licensing (currently a personal repo, marked `UNLICENSED`) | Distribution at scale |

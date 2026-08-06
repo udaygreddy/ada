@@ -175,16 +175,21 @@ tampering with a static skill on one machine.
 5. **Availability becomes a client-visible failure mode** — mitigated by the
    snapshot fallback, which must be tested, not assumed.
 
-## 8. Dependency — do not start before this clears
+## 8. Legal dependency — ✅ cleared
 
-The pending legal ask is *"may ADP-authored scripts run in client
-environments?"* This design changes the question to *"…and may the client's
-assistant call an ADP-operated endpoint for policy?"*
+**Approved**, covering both halves of the ask: ADP-authored scripts running
+client-side, *and* the client's assistant calling an ADP-operated policy
+endpoint. Folding both into one ask was the right call — a ruling obtained
+against the pre-MCP architecture would have had to be re-sought.
 
-**Fold the MCP into that same ask.** Obtaining a ruling against the current
-architecture and then changing the architecture wastes the ruling — and the
-ruling is the single longest-lead item in the whole programme (see
-[`STATUS.md`](STATUS.md)).
+The service is built (`ada-policy-service`, private) and no longer blocked on
+legal. **It is still blocked on the pre-launch items in §7 and the service
+README** — signing above all, plus authn, rate limiting and a log-retention
+policy.
+
+> Conditions attached to the approval must be recorded in
+> [`STATUS.md`](STATUS.md) §Legal approval and, where testable, encoded as
+> invariants with a failing test — the way pull-only already is.
 
 ## 9. Phasing
 
