@@ -76,6 +76,11 @@ Every future change should be tested against that sentence.
 7. **Stdlib only.** No third-party dependencies, so the entire bundle is
    readable by a client's security reviewer in one sitting. This is a *legal*
    requirement dressed as a technical one — see ADR-002.
+8. **No MCP call carries document content, extracted text, or PII — and no MCP
+   tool writes.** Applies to the planned ADP policy service (ADR-009): policy
+   flows out, client data never flows in. Parameters are limited to
+   non-sensitive scalars (doc_type, provider, state code, reference date,
+   version, ADP case id). Verifiable by reading the tool list.
 
 ---
 
@@ -156,6 +161,30 @@ names and navigation live in `connectors/*_export.md`.
 the taxonomy or scripts, each new provider would be a code change. Now it's a
 markdown file.
 **Validation of the choice.** Adding Paylocity touched zero pipeline code.
+
+### ADR-009 — An ADP policy service is allowed; an ADP data service is not *(amends ADR-001)*
+**Status.** Designed, not built — see [`MCP-DESIGN.md`](MCP-DESIGN.md).
+**Decision.** ADR-001 rejected "a hosted service" outright. That was too broad.
+Amended: **no ADP service may sit in the client's *data* path, but an
+ADP-operated *policy* service is permitted** — pull-only, serving rules,
+catalogs, connector navigation, remediation and forms, with a bundled snapshot
+as offline fallback.
+**Why.** ADR-001's real objection was the forbidden ADP→client *data*
+connection. Serving a rulebook is publishing, not accessing: no document,
+extracted text, or PII crosses. Meanwhile shipping rules inside the bundle has a
+demonstrated cost — three stale installs found on one machine, each
+reintroducing fixed bugs — and rules are the fastest-churning part of the system
+(every ADP rejection reason should become one).
+**The line.** Invariant §3.8. Strictly pull-only, no write tools, so the
+property is verifiable by reading the tool list rather than re-argued per change.
+**Rejected.** Validation-as-a-service (client data crosses — kills the premise);
+status/telemetry callbacks (a write path invites scope creep into the data path);
+baking policy into per-client bundles (loses live updates, keeps the staleness
+problem).
+**Cost, accepted.** ADA's first runtime infrastructure: an internet-facing
+service to secure and operate, a signing requirement (ADP-served text now
+reaches client models), and a legal question that must be folded into the
+pending ask rather than asked twice.
 
 ---
 
