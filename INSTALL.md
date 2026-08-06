@@ -173,6 +173,30 @@ folder in your project and connects to tools via MCP.
 
 ---
 
+## 5) Optional — connect the ADP policy service
+
+**You can skip this.** ADA runs completely on what you installed above. If you
+connect ADP's policy service, ADA picks up ADP's current document rules and
+export instructions at the start of each run instead of the copies frozen into
+your install — so a correction ADP makes reaches you without reinstalling.
+
+It is a read-only connection: ADA asks it for rules and instructions, and
+**sends it nothing** — no files, no document text, no company data. Your
+documents never leave your machine either way.
+
+Ask your ADP implementation contact for the server address, then add it as an
+MCP server in your assistant:
+
+- **Claude Desktop / Claude Code** — Settings → Connectors → *Add custom
+  connector*, or `claude mcp add ada-policy <address>`.
+- **VS Code / Copilot** — add it to `.vscode/mcp.json` alongside your other
+  servers.
+
+To confirm it's live, ask ADA: *"which policy version are you using?"* — it
+should name a version from the service rather than saying "bundled". If the
+service is ever unreachable, ADA says so in one line and continues on the
+bundled copies; it never blocks your run.
+
 ## Verify it's working
 
 In any tool, after install, type:
