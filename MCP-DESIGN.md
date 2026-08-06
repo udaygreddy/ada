@@ -186,7 +186,86 @@ architecture and then changing the architecture wastes the ruling — and the
 ruling is the single longest-lead item in the whole programme (see
 [`STATUS.md`](STATUS.md)).
 
-## 9. Phasing
+## 9. Project structure — where the code lives
+
+**Recommendation: the service gets its own repo. The policy content stays with
+the skill.**
+
+The split isn't symmetric, because policy and runtime sit on opposite sides of a
+trust boundary.
+
+### Why the service must be a separate repo
+
+1. **Client review.** Invariant §7 exists so a client's security reviewer can
+   read the whole bundle in one sitting. A repo that also contains a service
+   stack, IaC and auth code defeats that — the reviewer now has to work out
+   which half they're even looking at.
+2. **Accidental inclusion — a concrete risk, not a theoretical one.**
+   `build-plugin.sh` assembles the client bundle with `cp -R "$SKILL_SRC/."`.
+   One wrong path and ADP server code, config or a secret ships inside a zip
+   handed to clients. The cheapest mitigation is for that code to not exist in
+   the same repo.
+3. **Opposite dependency postures.** The skill is stdlib-only by law (ADR-002).
+   A service needs a framework, a container, and a dependency tree. Those rules
+   cannot coexist in one lint/CI policy without one of them being a lie.
+4. **Opposite release cadences.** Skill releases are rare and expensive
+   (redistribution). Service deploys should be frequent — that is the entire
+   point of the exercise.
+5. **Different CI and reviewers.** Script compile + gate regressions vs. build,
+   container scan, deploy. Different failure modes, different approvers.
+
+### Why policy stays in the skill repo
+
+The rules are already tested here — the 42-case corpus exists to validate them.
+Moving policy out would separate rules from the tests that prove them, and a
+rule change would span two repos. Keeping them together means **one PR adds a
+rule, its test case, and the shipped snapshot atomically.**
+
+### The seam: policy is a released artifact, consumed twice
+
+```
+ada  (this repo)                       ada-policy-service  (new repo)
+  ada/               skill bundle        src/tools/        get_* implementations
+  ada/validations.yaml  ─┐               deploy/           IaC, container
+  ada/taxonomy.yaml      ├─ policy       policy/           ← pulled, pinned, verified
+  ada/connectors/        │  source
+  tests/                ─┘  + its tests
+  release-policy.sh   → policy-<version>.tar.gz (signed)
+                                 │
+        ┌────────────────────────┴────────────────────────┐
+        ▼                                                 ▼
+  shipped in the skill as the                    served by the MCP
+  offline snapshot                               as live policy
+```
+
+`release-policy.sh` packages the policy files into a **signed, versioned
+artifact**. Both consumers take that same artifact:
+
+- the **skill** vendors it as its offline snapshot (§6),
+- the **service** pins a version and serves it.
+
+**Same bytes, same signature, same version number** — so the offline fallback
+and the live policy cannot semantically diverge. That property is why the seam
+is a release artifact rather than a git submodule or a copy-paste.
+
+### Governance this produces
+
+A rule change is a PR in *this* repo: reviewed, run against the test corpus,
+`ruleset_version` bumped. Publishing it is a tagged release. Deploying it is a
+change in the service repo. Two gates, each owned by the people who should own
+it — and rules still ship without a skill redistribution, which was the goal.
+
+### What not to do
+
+- **One monorepo with the service inside** — fails reasons 1–3 above; the
+  accidental-inclusion risk is the disqualifying one.
+- **Policy in its own third repo** — defensible at larger scale, but today it
+  would separate rules from their tests and make every rule change a two-repo
+  dance for no gain.
+- **Service authoring its own copy of the rules** — guarantees drift, and the
+  thing being served would no longer be the thing being tested.
+
+## 10. Phasing
 
 - **Phase A** — policy-serving MCP: manifest, ruleset, taxonomy, connectors,
   remediation, forms, quarterly policy. Bundled snapshot fallback.
