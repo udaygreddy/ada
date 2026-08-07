@@ -21,6 +21,7 @@ Actions:
 
 Usage:
   ledger.py init      --ledger L --run-id R --client C --operator O --host H
+                      (auto-stamps skill_version + ruleset_version into genesis)
   ledger.py authorize --ledger L --connector NAME --scope SCOPE
   ledger.py approve   --ledger L --path FILE --checklist-id ID [--note N]
                       [--validation pass|warn|fail --validation-note N [--override]]
@@ -34,6 +35,30 @@ import secrets
 import sys
 
 import _ada
+
+
+def _bundle_versions():
+    """Read the skill version (ada/VERSION) and ruleset version
+    (ada/validations.yaml) that ship alongside these scripts. Recorded at init so
+    every package traces to the exact build that screened it. '' if not found."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(here)  # ada/
+    sv = ""
+    try:
+        with open(os.path.join(root, "VERSION"), encoding="utf-8") as f:
+            sv = f.read().strip()
+    except OSError:
+        pass
+    rv = ""
+    try:
+        with open(os.path.join(root, "validations.yaml"), encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("ruleset_version:"):
+                    rv = line.split(":", 1)[1].strip()
+                    break
+    except OSError:
+        pass
+    return sv, rv
 
 
 def _entries(path):
@@ -63,11 +88,16 @@ def _append(path, action, target, payload, actor="operator"):
 def cmd_init(a):
     if os.path.exists(a.ledger) and _entries(a.ledger):
         sys.exit(f"refuse: ledger already exists and is non-empty: {a.ledger}")
+    sv, rv = _bundle_versions()
+    sv = a.skill_version or sv or "unknown"
+    rv = a.ruleset_version or rv or "unknown"
     e = _append(
         a.ledger, "init", a.run_id,
-        {"run_id": a.run_id, "client": a.client, "operator": a.operator, "host": a.host},
+        {"run_id": a.run_id, "client": a.client, "operator": a.operator,
+         "host": a.host, "skill_version": sv, "ruleset_version": rv},
     )
-    print(f"initialized run {a.run_id} (seq 0, hash {e['entry_hash'][:19]}…)")
+    print(f"initialized run {a.run_id}  (skill v{sv} · ruleset v{rv})")
+    print(f"  seq 0, hash {e['entry_hash'][:19]}…")
 
 
 def cmd_authorize(a):
@@ -257,6 +287,10 @@ def main():
     s.add_argument("--client", required=True)
     s.add_argument("--operator", required=True)
     s.add_argument("--host", required=True)
+    s.add_argument("--skill-version", default="",
+                   help="override; default reads ada/VERSION")
+    s.add_argument("--ruleset-version", default="",
+                   help="override; default reads validations.yaml")
 
     s = sub.add_parser("authorize"); s.set_defaults(fn=cmd_authorize)
     s.add_argument("--ledger", required=True)

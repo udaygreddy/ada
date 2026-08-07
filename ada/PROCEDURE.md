@@ -77,6 +77,9 @@ Scripts are stdlib-only Python 3 — nothing to install. Example:
 
    `python3 "$ADA_HOME/scripts/ledger.py" init --ledger ./.ada/ledger.jsonl --run-id <id>
    --client <name> --operator <who> --host <this host>`
+   This auto-stamps the **skill version** (`ada/VERSION`) and **ruleset version**
+   (`validations.yaml`) into the run — they end up in the manifest + gap report so
+   the package traces to the exact build that screened it. No arg needed.
 2. Derive the per-client requirement list. **Source priority — check in this
    order, and never re-ask for information already given:**
    - **2a. Operator-provided text (primary).** If the operator's message already

@@ -111,6 +111,8 @@ def main():
     c = manifest["counts"]
     v = c["validation"]
     print(f"packaged {len(staged)} file(s) → {a.out}")
+    print(f"  skill v{run_meta.get('skill_version', '?')} · "
+          f"ruleset v{run_meta.get('ruleset_version', '?')}")
     print(f"  mode: {manifest['mode']}  ·  collected {c['collected']}/"
           f"{c['requested' if reqs else 'in_scope']}  ·  {c['gaps']} gap(s)")
     print(f"  validation: {v['validated']} ok · {v['warn']} warn · "
@@ -203,6 +205,8 @@ def write_gap_report(path, manifest, staged):
         "",
         f"- Run: `{run.get('run_id', '?')}`  ·  Operator: {run.get('operator', '?')}"
         f"  ·  Host: {run.get('host', '?')}",
+        f"- Screened by: ADA skill v{run.get('skill_version', '?')} · "
+        f"ruleset v{run.get('ruleset_version', '?')}",
         f"- Generated: {manifest['generated_at']}",
         f"- **{headline}** ({c['gaps']} gaps)",
         f"- Ledger integrity: {'✅ verified' if manifest['ledger_verified'] else '❌'}",

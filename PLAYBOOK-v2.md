@@ -88,7 +88,7 @@ tools, bundled scripts, or MCP. The procedure never names a vendor tool.
 | `SOURCE.list / SOURCE.fetch` | Enumerate & retrieve from a cloud source | MCP connector (Drive, SharePoint, Gmail, QuickBooks…) |
 | `PII.scan(ref)` | Local pattern scan for sensitive data | `scripts/pii_scan.py` — never an external call |
 | `VALIDATE(file, expected)` | Judge a file against its doc-type acceptance checks | `validations.yaml` (checks by doc_type) + `scripts/validate.py` (`--extract` masked text, `--required-quarters`, `--expected-check-dates`); the **agent judges every check**; verdict recorded/gated via `ledger.py approve` |
-| `LEDGER.record / LEDGER.verify` | Append consent event / mint & check approval tokens | `scripts/ledger.py` |
+| `LEDGER.record / LEDGER.verify` | Append consent event / mint & check approval tokens; stamp skill+ruleset version at init | `scripts/ledger.py` |
 | `PACKAGE.assemble` | Stage only ledger-approved files + emit manifest | `scripts/package.py` |
 | `ASK.confirm` | Get an explicit human decision | The host's normal chat turn |
 
