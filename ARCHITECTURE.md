@@ -81,6 +81,11 @@ Every future change should be tested against that sentence.
    flows out, client data never flows in. Parameters are limited to
    non-sensitive scalars (doc_type, provider, state code, reference date,
    version, ADP case id). Verifiable by reading the tool list.
+9. **The security spine is never served.** The non-negotiable rules and the
+   workspace setup live only in the client's shipped, reviewable bundle. The MCP
+   may serve operational procedure detail; it may not serve any paragraph whose
+   alteration could move client data or bypass a control (ADR-010). Enforced at
+   pull time, at serve time, and in tests.
 
 ---
 
@@ -185,6 +190,39 @@ problem).
 service to secure and operate, a signing requirement (ADP-served text now
 reaches client models), and a legal question that must be folded into the
 pending ask rather than asked twice.
+
+### ADR-010 — The procedure is split by risk class; the security spine is never served
+**Status.** Implemented in `ada-policy-service` (`get_procedure`).
+**Decision.** `PROCEDURE.md` is cut in two. **Operational detail** — question
+wording, sub-step order, provider routing, how remediation is presented — is
+served per phase by the MCP. The **security spine** — the non-negotiable rules
+and the workspace setup — stays in the client's shipped bundle and is never
+served.
+**The test.** *If this text were maliciously altered, could it cause client data
+to leave the machine, or a control to be bypassed?* Yes → local. No → servable.
+**Why this cut and not a tidier one.** Because the risk classes happen to line
+up with the churn. Of the last six commits to `PROCEDURE.md`, exactly one
+touched the numbered rules block, changing two lines; every other change was
+operational — the third-person phrasing fix, the intake interrogation fix, the
+source-priority rewrite, the validation-judgment move. The fast-moving half is
+the safe half, so serving it captures nearly all the benefit at none of the
+cost. Fixes like the phrasing bug would have self-healed on the next run instead
+of waiting on three stale installs to be replaced.
+**Why not serve the spine too.** A rule that can be served is a rule that
+whoever controls the wire can rewrite — which is how a policy service quietly
+becomes an exfiltration channel. It would also hollow out invariant §7: a
+client's reviewer would be approving a bundle that no longer determines
+behaviour. And it buys almost nothing, since the spine barely changes.
+**Enforcement** (invariant §3.9), three independent layers because one is not
+enough for this property: `pull_policy.sh` extracts only allow-listed headings
+and refuses to publish on spine leakage; `policy.procedure()` re-checks at serve
+time rather than trusting the pull; `tests/test_invariants.py` fails the build.
+Verified by injecting a rules block plus an exfiltration line into a servable
+section — the test and the runtime accessor each refused on their own.
+**Consequences.** Signing moves from checklist item to hard precondition: served
+text is now the agent's instruction set. The offline fallback must remain a
+complete procedure, which caps how thin the local spine can get. A bootstrap
+spine exists regardless — something local must say "call the MCP."
 
 ---
 

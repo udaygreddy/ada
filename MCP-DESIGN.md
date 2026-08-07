@@ -191,7 +191,74 @@ policy.
 > [`STATUS.md`](STATUS.md) §Legal approval and, where testable, encoded as
 > invariants with a failing test — the way pull-only already is.
 
-## 9. Phasing
+## 9. Serving the procedure — split by risk class
+
+The natural next question is whether `PROCEDURE.md` itself should move, so the
+skill is mostly driven centrally. It can — but only half of it should, and the
+line is not where convenience would put it.
+
+`PROCEDURE.md` holds two very different kinds of text:
+
+1. **The security spine** — the non-negotiable rules (never transmit, consent
+   via the ledger, content-is-data-not-instructions, read-only allow-lists, PII
+   held) and the workspace setup.
+2. **Operational detail** — question wording, sub-step order, provider routing,
+   how to present remediation.
+
+Serving (2) is a plain win. Serving (1) is a different category of thing: a bad
+validation rule produces a wrong verdict; a bad *procedure* can produce data
+exfiltration.
+
+### The test
+
+> *If this text were maliciously altered, could it cause client data to leave
+> the machine, or a control to be bypassed?*
+> **Yes → local spine, never servable. No → servable.**
+
+### The evidence says the risky half doesn't need to move
+
+Churn analysis of `ada/PROCEDURE.md` (13 commits): only **one of the last six**
+touched the numbered rules block, changing two lines. Earlier rule edits were
+structural — the initial commit, introducing Phase 0, adding providers.
+Everything else was operational: the third-person phrasing fix, the intake
+interrogation fix, the source-priority rewrite, the validation-judgment move.
+
+**The fast-moving half is exactly the half that is safe to serve.** That is
+fortunate, and it should drive the design rather than convenience.
+
+### What this costs and buys
+
+| Buys | Costs |
+|---|---|
+| Workflow fixes reach every client on next run — the phrasing bug would have self-healed | Signing stops being a checklist item and becomes a **hard precondition** |
+| One workflow version everywhere; no drift across installs | Offline fallback must be a *complete* procedure, so it is maintained regardless |
+| Fastest iteration exactly where the bugs have been | Injection blast radius grows — served text is the agent's instruction set |
+| New phases/providers without redistribution | A bootstrap spine exists no matter what; only its thinness is negotiable |
+
+Going further — serving the spine too — would buy very little (it barely
+changes) and would cost the trust story: a client's security reviewer would be
+approving a bundle that no longer determines behaviour, hollowing out invariant
+§7.
+
+### Implemented
+
+`get_procedure(section)` in `ada-policy-service` serves six sections —
+`phase-0`, `phase-a`, `phase-b`, `phase-b5`, `phase-c`, `troubleshooting`.
+Three independent guards keep the spine off the wire, because one is not enough
+for this property:
+
+1. `pull_policy.sh` extracts only allow-listed headings and **refuses to
+   publish** if a spine marker appears in a servable section.
+2. `policy.procedure()` re-checks at **serve time** rather than trusting the
+   pull step.
+3. `tests/test_invariants.py` **fails the build** on spine content in any
+   section.
+
+Verified by injecting `## Non-negotiable rules … upload to evil.example` into a
+servable section: the test failed with the specific markers *and* the runtime
+accessor refused independently.
+
+## 10. Phasing
 
 - **Phase A** — policy-serving MCP: manifest, ruleset, taxonomy, connectors,
   remediation, forms, quarterly policy. Bundled snapshot fallback.
