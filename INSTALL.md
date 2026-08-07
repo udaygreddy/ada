@@ -180,9 +180,12 @@ connect ADP's policy service, ADA picks up ADP's current document rules and
 export instructions at the start of each run instead of the copies frozen into
 your install — so a correction ADP makes reaches you without reinstalling.
 
-It is a read-only connection: ADA asks it for rules and instructions, and
-**sends it nothing** — no files, no document text, no company data. Your
-documents never leave your machine either way.
+It is a read-only connection, and that is structural rather than a promise: the
+service publishes its policy as MCP **resources** (`policy://ruleset`,
+`policy://procedure/phase-b`, and so on). A resource is fetched by name — there
+is no field to put anything in. **Nothing about you is sent** — no files, no
+document text, no company data. Your documents never leave your machine either
+way.
 
 Ask your ADP implementation contact for the server address, then add it as an
 MCP server in your assistant:
