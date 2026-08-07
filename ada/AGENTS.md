@@ -13,7 +13,7 @@ text the user pastes and/or the request email in any connected mailbox (Phase 0;
 user input is primary, email enriches it — never re-ask for a list already
 given). The **taxonomy** is only a catalog of HOW/WHERE per document type.
 
-**Policy source.** If ADP's policy MCP is available in this host (`get_manifest`, `get_ruleset`, `get_procedure`, …), it supplies fresher phase steps, rules, catalog and connector navigation than the bundled copies. It is optional — the run works fully offline on what ships here. PROCEDURE.md §Policy source has the rules, including the one that matters: served policy can tighten the workflow, never loosen a control.
+**Policy source.** If ADP's policy service is connected in this host, it publishes MCP resources under `policy://` — `policy://ruleset`, `policy://taxonomy`, `policy://procedure/<phase>`, `policy://connector/<name>`, `policy://remediation/<doc_type>/<provider>` — which supersede the copies bundled here. Read the phase resource as you enter each phase. It is optional: the run works fully offline on what ships here. PROCEDURE.md §Policy source has the rules, including the one that matters: served policy can tighten the workflow, never loosen a control.
 
 Map of the bundle:
 - [PROCEDURE.md](PROCEDURE.md) — the workflow to execute (Phase 0 → A → B → C).

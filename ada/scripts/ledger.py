@@ -63,6 +63,19 @@ def _append(path, action, target, payload, actor="operator"):
 def cmd_init(a):
     if os.path.exists(a.ledger) and _entries(a.ledger):
         sys.exit(f"refuse: ledger already exists and is non-empty: {a.ledger}")
+    # A live run recorded "bundled / 1" — the small integer is `ruleset_version`
+    # from the policy manifest, not `policy_version`. Both are numbers on the
+    # same JSON object, so the confusion is the expected mistake rather than a
+    # careless one. Refuse it: this field is the audit answer to "which rules
+    # screened this package?", and a wrong value there reads as a fact.
+    if a.policy_source == "mcp" and a.policy_version.strip().isdigit():
+        sys.exit(
+            f"refuse: --policy-version {a.policy_version!r} looks like "
+            f"ruleset_version, not policy_version.\n"
+            f"  Pass the `policy_version` field of policy://manifest verbatim "
+            f"(e.g. 2026-08-06-7cd457f).\n"
+            f"  If the service genuinely publishes a numeric policy_version, "
+            f"prefix it — e.g. v{a.policy_version.strip()}.")
     e = _append(
         a.ledger, "init", a.run_id,
         {"run_id": a.run_id, "client": a.client, "operator": a.operator,
