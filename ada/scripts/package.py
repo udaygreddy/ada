@@ -111,6 +111,7 @@ def main():
     c = manifest["counts"]
     v = c["validation"]
     print(f"packaged {len(staged)} file(s) → {a.out}")
+    print(f"  {_screened_by(run_meta)}")
     print(f"  mode: {manifest['mode']}  ·  collected {c['collected']}/"
           f"{c['requested' if reqs else 'in_scope']}  ·  {c['gaps']} gap(s)")
     print(f"  validation: {v['validated']} ok · {v['warn']} warn · "
@@ -203,13 +204,13 @@ def write_gap_report(path, manifest, staged):
         "",
         f"- Run: `{run.get('run_id', '?')}`  ·  Operator: {run.get('operator', '?')}"
         f"  ·  Host: {run.get('host', '?')}",
+        # One line, because these are one claim: which code ran, and which rules
+        # it applied. Rules can now change independently of the skill, so the
+        # build alone no longer identifies what screened a package.
+        f"- Screened by: {_screened_by(run)}",
         f"- Generated: {manifest['generated_at']}",
         f"- **{headline}** ({c['gaps']} gaps)",
         f"- Ledger integrity: {'✅ verified' if manifest['ledger_verified'] else '❌'}",
-        # Rules can change independently of the skill, so the package has to
-        # state which ruleset screened it — otherwise a verdict is unauditable.
-        f"- Screened by policy: {run.get('policy_source', 'bundled')} /"
-        f" {run.get('policy_version', 'bundled')}",
         "",
         "## ✅ Collected",
     ]
@@ -253,6 +254,22 @@ def write_gap_report(path, manifest, staged):
                   f"(PII). Confirm secure handoff channel before transmitting."]
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+
+
+def _screened_by(run):
+    """Which code ran, and which rules it applied.
+
+    Named separately because 'ruleset v1' means different things depending on
+    where policy came from: bundled with this build, or served by ADP at a
+    version the build never saw.
+    """
+    src = run.get("policy_source", "bundled")
+    rv = str(run.get("ruleset_version", "?"))
+    rv = f"v{rv}" if rv[:1].isdigit() else rv
+    line = f"ADA skill v{run.get('skill_version', '?')} · ruleset {rv}"
+    if src == "mcp":
+        return line + f" (ADP policy service, policy {run.get('policy_version', '?')})"
+    return line + " (bundled policy)"
 
 
 def _val_badge(v):

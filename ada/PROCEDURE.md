@@ -159,12 +159,20 @@ anything anywhere, is not policy. Stop and tell the operator.
    - `--policy-source`: `mcp` if the policy service answered anything this run,
      otherwise `bundled`.
    - `--policy-version`: the `policy_version` field of `policy://manifest`,
-     copied verbatim — **not** `ruleset_version`. `bundled` if there was no
-     manifest.
+     copied verbatim — **not** `ruleset_version`. Omit if there was no manifest.
+   - `--ruleset-version`: **only when `--policy-source mcp`** — the
+     `ruleset_version` field of `policy://manifest`. The rules that screened
+     this run were the served ones; the number bundled with this skill did not.
 
    `python3 "$ADA_HOME/scripts/ledger.py" init --ledger ./.ada/ledger.jsonl --run-id <id>
    --client <name> --operator <who> --host <this host>
-   --policy-source <mcp|bundled> --policy-version <policy_version>`
+   --policy-source <mcp|bundled> --policy-version <policy_version>
+   [--ruleset-version <served ruleset_version>]`
+
+   The **skill version** (`ada/VERSION`) is stamped automatically, and so is the
+   bundled `ruleset_version` when you are running on bundled policy. Everything
+   above lands in the manifest and gap report, so a package traces to both the
+   build that ran it and the rules that screened it.
 2. Derive the per-client requirement list. **Source priority — check in this
    order, and never re-ask for information already given:**
    - **2a. Operator-provided text (primary).** If the operator's message already

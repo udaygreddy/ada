@@ -21,7 +21,8 @@ Depending on your tool, you'll use one of these (your ADP contact provides them)
 | GitHub Copilot (VS Code) | the `adp-discovery` folder |
 
 > The `.zip`/folder and the `.plugin` contain the same skill — just packaged
-> differently for each tool.
+> differently for each tool. The file we send you may carry a version suffix
+> (e.g. `adp-discovery-0.2.0.plugin`) — install whichever file you were given.
 
 ## One-time prerequisites
 

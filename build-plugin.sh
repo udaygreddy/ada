@@ -23,13 +23,32 @@ SKILL_SRC="$REPO/ada"
 # apm reads primitives from .apm/ only — keep a committed mirror there.
 APM_MIRROR="$REPO/.apm/skills/$NAME"
 
+# --- versions: ada/VERSION is canonical; validations.yaml carries ruleset ---
+VER="$(cat "$SKILL_SRC/VERSION" 2>/dev/null | tr -d '[:space:]')"
+[ -n "$VER" ] || { echo "MISSING ada/VERSION"; exit 1; }
+RV="$(grep -m1 '^ruleset_version:' "$SKILL_SRC/validations.yaml" | awk '{print $2}')"
+BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+GIT_SHA="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+# Warn (non-fatal) if committed manifests drift from the canonical version.
+for m in "plugin/plugin.json" "apm.yml"; do
+  mv="$(grep -m1 -E '"?version"?[: ]' "$REPO/$m" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+  [ "$mv" = "$VER" ] || echo "  NOTE: $m version ($mv) != ada/VERSION ($VER) — align in source"
+done
+
 # --- resync the apm mirror from the canonical source ---
 rm -rf "$APM_MIRROR"
 mkdir -p "$(dirname "$APM_MIRROR")"
 cp -R "$SKILL_SRC" "$APM_MIRROR"
 find "$APM_MIRROR" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 find "$APM_MIRROR" -name '.DS_Store' -delete 2>/dev/null || true
-echo "synced apm mirror .apm/skills/$NAME (from ada/) — commit it if changed"
+echo "synced apm mirror .apm/skills/$NAME (from ada/)"
+
+# BUILD_INFO.json — makes an installed skill self-describing for support.
+build_info() {
+  printf '{\n  "skill_version": "%s",\n  "ruleset_version": "%s",\n  "built_at": "%s",\n  "git_sha": "%s"\n}\n' \
+    "$VER" "$RV" "$BUILT_AT" "$GIT_SHA" > "$1/BUILD_INFO.json"
+}
+build_info "$APM_MIRROR"
 
 rm -rf "$BUILD"
 mkdir -p "$SKILL_DST" "$BUILD/.claude-plugin"
@@ -40,9 +59,11 @@ cp -R "$SKILL_SRC/." "$SKILL_DST/"
 find "$SKILL_DST" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
 find "$SKILL_DST" -name '.DS_Store' -delete 2>/dev/null || true
 
-# Manifest + plugin README.
+# Manifest + plugin README; stamp the manifest version from canonical VERSION.
 cp "$REPO/plugin/plugin.json" "$BUILD/.claude-plugin/plugin.json"
 cp "$REPO/plugin/README.md" "$BUILD/README.md"
+python3 -c "import json;p='$BUILD/.claude-plugin/plugin.json';d=json.load(open(p));d['version']='$VER';json.dump(d,open(p,'w'),indent=2)"
+build_info "$SKILL_DST"
 
 # --- manual structure validation (mirrors `claude plugin validate`) ---
 fail=0
@@ -59,21 +80,25 @@ python3 -m py_compile "$SKILL_DST"/scripts/*.py || { echo "scripts do not compil
 [ "$fail" -eq 0 ] || { echo "VALIDATION FAILED"; exit 1; }
 echo "validation OK"
 
-# --- package ---
-PKG="/tmp/$NAME.plugin"
-rm -f "$PKG"
+# --- package (version-stamped filename + a stable-named copy) ---
+PKG="/tmp/$NAME-$VER.plugin"
+PKG_STABLE="/tmp/$NAME.plugin"
+rm -f "$PKG" "$PKG_STABLE"
 ( cd "$BUILD" && zip -rq "$PKG" . -x "*.DS_Store" )
+cp "$PKG" "$PKG_STABLE"
 echo "built $PKG"
 
 # --- skill-folder zip (claude.ai upload / Claude Code install) ---
 # Top-level folder is "$NAME/" with SKILL.md at its root.
-SKILLZIP="/tmp/$NAME-skill.zip"
-rm -f "$SKILLZIP"
+SKILLZIP="/tmp/$NAME-$VER-skill.zip"
+SKILLZIP_STABLE="/tmp/$NAME-skill.zip"
+rm -f "$SKILLZIP" "$SKILLZIP_STABLE"
 SKILLSTAGE="$REPO/build/skill"
 rm -rf "$SKILLSTAGE"
 mkdir -p "$SKILLSTAGE/$NAME"
 cp -R "$SKILL_DST/." "$SKILLSTAGE/$NAME/"
 ( cd "$SKILLSTAGE" && zip -rq "$SKILLZIP" "$NAME" -x "*.DS_Store" )
+cp "$SKILLZIP" "$SKILLZIP_STABLE"
 echo "built $SKILLZIP"
 
 # --- apm packaging (optional; needs the apm CLI: pip install apm-cli) ---
@@ -96,9 +121,13 @@ if [ -z "$OUT" ]; then
   OUT="$(ls -dt "$HOME/Library/Application Support/Claude/local-agent-mode-sessions"/*/*/local_*/outputs 2>/dev/null | head -1 || true)"
 fi
 if [ -n "$OUT" ] && [ -d "$OUT" ]; then
-  cp "$PKG" "$OUT/$NAME.plugin"
-  cp "$SKILLZIP" "$OUT/$NAME-skill.zip"
-  echo "delivered to $OUT/ ($NAME.plugin + $NAME-skill.zip)"
+  cp "$PKG" "$OUT/$NAME-$VER.plugin"; cp "$PKG_STABLE" "$OUT/$NAME.plugin"
+  cp "$SKILLZIP" "$OUT/$NAME-$VER-skill.zip"; cp "$SKILLZIP_STABLE" "$OUT/$NAME-skill.zip"
+  echo "delivered to $OUT/ (versioned + stable names)"
 else
   echo "no outputs dir found; artifacts at $PKG and $SKILLZIP"
 fi
+
+echo "────────────────────────────────────────────────────────"
+echo "Built $NAME v$VER (ruleset v$RV) · $BUILT_AT · $GIT_SHA"
+echo "────────────────────────────────────────────────────────"

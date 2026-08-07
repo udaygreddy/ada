@@ -21,6 +21,7 @@ Actions:
 
 Usage:
   ledger.py init      --ledger L --run-id R --client C --operator O --host H
+                      (auto-stamps skill_version + ruleset_version into genesis)
   ledger.py authorize --ledger L --connector NAME --scope SCOPE
   ledger.py approve   --ledger L --path FILE --checklist-id ID [--note N]
                       [--validation pass|warn|fail --validation-note N [--override]]
@@ -34,6 +35,36 @@ import secrets
 import sys
 
 import _ada
+
+
+def _vlabel(v):
+    """'v1' for a version number, the token itself for a sentinel like
+    'mcp-unstated' — 'ruleset vmcp-unstated' reads as noise."""
+    return f"v{v}" if str(v)[:1].isdigit() else str(v)
+
+
+def _bundle_versions():
+    """Read the skill version (ada/VERSION) and ruleset version
+    (ada/validations.yaml) that ship alongside these scripts. Recorded at init so
+    every package traces to the exact build that screened it. '' if not found."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(here)  # ada/
+    sv = ""
+    try:
+        with open(os.path.join(root, "VERSION"), encoding="utf-8") as f:
+            sv = f.read().strip()
+    except OSError:
+        pass
+    rv = ""
+    try:
+        with open(os.path.join(root, "validations.yaml"), encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("ruleset_version:"):
+                    rv = line.split(":", 1)[1].strip()
+                    break
+    except OSError:
+        pass
+    return sv, rv
 
 
 def _entries(path):
@@ -76,17 +107,36 @@ def cmd_init(a):
             f"(e.g. 2026-08-06-7cd457f).\n"
             f"  If the service genuinely publishes a numeric policy_version, "
             f"prefix it — e.g. v{a.policy_version.strip()}.")
+
+    sv, rv = _bundle_versions()
+    sv = a.skill_version or sv or "unknown"
+    # `ruleset_version` must name the rules that actually screened this run. On
+    # a served policy that is the service's ruleset, not the one bundled with
+    # these scripts — those numbers diverge the moment ADP publishes a rule the
+    # client has not reinstalled, which is the entire point of the service.
+    # Reading the local file would then record a plausible, wrong number.
+    if a.ruleset_version:
+        rv = a.ruleset_version
+    elif a.policy_source == "mcp":
+        rv = "mcp-unstated"
+        print("  NOTE: running on served policy without --ruleset-version; "
+              "recording 'mcp-unstated' rather than the bundled number, which "
+              "did not screen this run.", file=sys.stderr)
+    else:
+        rv = rv or "unknown"
+
     e = _append(
         a.ledger, "init", a.run_id,
         {"run_id": a.run_id, "client": a.client, "operator": a.operator,
-         "host": a.host,
-         # Which policy screened this run. Rules can now change independently of
+         "host": a.host, "skill_version": sv, "ruleset_version": rv,
+         # Which policy screened this run. Rules can change independently of
          # the skill, so "bundled v1" and "mcp v7" are different claims about
          # the same package — the manifest must be able to say which.
          "policy_version": a.policy_version or "bundled",
          "policy_source": a.policy_source},
     )
-    print(f"initialized run {a.run_id} (seq 0, hash {e['entry_hash'][:19]}…)")
+    print(f"initialized run {a.run_id}  (skill v{sv} · ruleset {_vlabel(rv)})")
+    print(f"  seq 0, hash {e['entry_hash'][:19]}…")
     print(f"  policy: {a.policy_source} / {a.policy_version or 'bundled'}")
 
 
@@ -277,6 +327,12 @@ def main():
     s.add_argument("--client", required=True)
     s.add_argument("--operator", required=True)
     s.add_argument("--host", required=True)
+    s.add_argument("--skill-version", default="",
+                   help="override; default reads ada/VERSION")
+    s.add_argument("--ruleset-version", default="",
+                   help="override; default reads validations.yaml. On served "
+                        "policy pass the service's ruleset_version — the "
+                        "bundled one did not screen the run")
     s.add_argument("--policy-version", default="",
                    help="policy_version from the ADP policy service manifest, "
                         "or omit when running on the bundled policy")
