@@ -106,25 +106,67 @@ Local skill (shipped)            ADP policy MCP (pull-only)      Client's model
   bundled policy snapshot    (fallback when unreachable)
 ```
 
-### Tool surface
+### The surface: resources for documents, tools for computation
 
-Read-only. No parameter carries client data.
+Read-only throughout. Nothing here can receive client data.
+
+Almost everything this service publishes is *a document with a name*, so it is
+an MCP **resource** addressed by a `policy://` URI rather than a tool call. That
+is not tidiness. A tool takes arguments, so "cannot receive client data" is a
+property somebody has to keep true. A resource read has no arbitrary input, so
+the same property holds by construction — see ADR-011 for why the original
+tools-only surface got this backwards.
+
+| Resource URI | Returns |
+|---|---|
+| `policy://manifest` | Version of every policy artifact — the staleness check |
+| `policy://ruleset` | Validation rules + `ruleset_version` |
+| `policy://taxonomy` | Document catalog |
+| `policy://procedure/<phase>` | One workflow phase's operational detail (ADR-010) |
+| `policy://connector/<name>` | Navigation for `paychex_export` \| `paylocity_export` \| `intuit` \| … |
+| `policy://form/<form_id>` | Blank POA / 8655 |
+| `policy://remediation/<doc_type>/<provider>` | Exact re-export fix |
+
+Templates are expanded into **concrete URIs at startup** — 30 of them from a
+13-file bundle — so a client sees `policy://procedure/phase-b` in a resource
+listing rather than a `{section}` pattern. This matters because a host merges
+resources from every connected server into one flat namespace, which is the one
+place resources are weaker than tools.
+
+Only two entries are tools, because each computes an answer from an input rather
+than returning stored text:
 
 | Tool | Returns |
 |---|---|
-| `get_manifest()` | Current version of every policy artifact — staleness check |
-| `get_ruleset()` | Validation rules + `ruleset_version` |
-| `get_taxonomy()` | Document catalog |
-| `get_connector(provider)` | Navigation for `paychex` \| `paylocity` \| `intuit` \| … |
-| `get_remediation(doc_type, provider)` | Exact re-export fix |
-| `get_required_quarters(ref_date)` | ADP's quarterly-timing policy |
+| `get_required_quarters(ref_date)` | ADP's quarterly-timing policy for that date |
 | `get_state_rules(state_codes[])` | Conditional requirements by state |
-| `get_form(form_id)` | Blank POA / 8655 |
-| *(Phase B)* `get_requirements(case_id)` | Per-client requirement list |
+
+The document tools (`get_ruleset`, `get_procedure`, …) remain callable as
+**deprecated aliases** so a client on an older skill build keeps working. Both
+paths run the same bundle accessor, and `test_invariants.py` compares them
+pairwise — an alias and its resource cannot drift into two versions of policy.
 
 There is no `report_*`, `submit_*`, or `upload_*`. If ADP implementation wants
 status visibility, it comes from **ADP's own ingest of the delivered package** —
 never from the client's machine.
+
+### Freshness: reload works, push does not (yet)
+
+The service watches its pinned policy directory and swaps in a republished
+bundle without a restart, so a correction reaches connected clients within a
+minute instead of at next connect. A reload that fails verification is discarded
+and the last known-good bundle keeps serving — stale policy is recoverable,
+unverified policy is not.
+
+Change events are published to the subscription bus, but **nothing can receive
+them yet.** `subscriptions/listen` (SEP-2575) is the only delivery path in this
+SDK, and it is not dispatchable: the session negotiates 2025-11-25 on both stdio
+and streamable HTTP, and the method answers "Method not found". Probed on both
+transports rather than assumed. Publishing anyway costs nothing and starts
+working the day the wire does.
+
+So staleness detection stays where it already was: the client reads
+`policy://manifest` at the start of a run and compares versions.
 
 ### Offline behaviour — mandatory, not a nicety
 

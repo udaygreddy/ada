@@ -86,6 +86,12 @@ Every future change should be tested against that sentence.
    may serve operational procedure detail; it may not serve any paragraph whose
    alteration could move client data or bypass a control (ADR-010). Enforced at
    pull time, at serve time, and in tests.
+10. **Published policy is served as resources, not tools.** Anything that is a
+    document with a name — ruleset, taxonomy, a procedure phase, a connector, a
+    form, a remediation step — is addressed by a `policy://` URI. Only the two
+    entries that *compute* from an input remain tools (ADR-011). A resource read
+    has no argument that could carry a document, so §3.8 holds by construction
+    on that surface rather than by test.
 
 ---
 
@@ -223,6 +229,53 @@ section — the test and the runtime accessor each refused on their own.
 text is now the agent's instruction set. The offline fallback must remain a
 complete procedure, which caps how thin the local spine can get. A bootstrap
 spine exists regardless — something local must say "call the MCP."
+
+---
+
+### ADR-011 — Published policy is a resource; only computation is a tool
+**Status.** Implemented in `ada-policy-service` (`resources.py`), with the
+former tools retained as deprecated aliases.
+**Decision.** The seven things this service publishes as documents are MCP
+**resources** addressed by URI — `policy://manifest`, `policy://ruleset`,
+`policy://taxonomy`, `policy://procedure/<phase>`, `policy://connector/<name>`,
+`policy://form/<id>`, `policy://remediation/<doc_type>/<provider>`. Two entries
+stay **tools** because each computes an answer from an input rather than
+returning stored text: `get_required_quarters(ref_date)` and
+`get_state_rules(state_codes)`.
+**Why this is a correction, not a preference.** The original surface was
+tools-only, and the reason was backwards. `test_invariants.py` was written
+first, asserting that every tool is `get_*` with an allow-listed parameter — so
+everything went where that assertion could see it. But a resource **cannot**
+take client data: a URI read has no arbitrary input to smuggle a document
+through. Resources are the structural form of the very property the test was
+written to police. The primitive that needs no policing lost to the one that
+could be policed.
+**What it costs.** Discoverability. A host lists resources from every connected
+server into one flat namespace — a live probe returned `policy://ruleset`
+alongside unrelated widget HTML from two other servers — whereas a tool
+advertises itself with its own name and description. Mitigated by enumerating
+every template into concrete URIs at startup, so `policy://procedure/phase-b`
+appears by name rather than as a `{section}` pattern the client must know how to
+fill in. 30 concrete resources are published from a 13-file bundle.
+**What it does not fix.** The model under-fetching. A live run called the
+service twice — manifest and one phase — then read the local bundle for
+everything else. Resources make each fetch marginally *less* discoverable, not
+more. That defect needs a forcing function and is still open (§8).
+**Transition.** Every document tool remains callable, marked `DEPRECATED` in its
+description with a pointer to its URI. Both paths run the same bundle accessor,
+so an alias and its resource cannot answer differently — asserted in
+`test_invariants.py`, which compares them pairwise. A client on the previous
+skill build keeps working; a client on the current one never calls them.
+**Subscriptions — half-landed, stated plainly.** A republished bundle is now
+picked up without a restart: the service watches the pinned directory, verifies,
+and swaps, keeping the last known-good bundle if verification fails. Change
+events are published to the subscription bus, **but no client can receive them
+yet** — `subscriptions/listen` (SEP-2575) is the only delivery path in this SDK
+and it is not dispatchable; the session negotiates 2025-11-25 on both stdio and
+streamable HTTP, and the method returns "Method not found". Probed on both
+transports rather than assumed. Until the wire lands, staleness is detected by
+reading `policy://manifest` at run start, which is what the procedure already
+says to do.
 
 ---
 

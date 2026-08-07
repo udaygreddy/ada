@@ -37,6 +37,12 @@ import sys
 import _ada
 
 
+def _vlabel(v):
+    """'v1' for a version number, the token itself for a sentinel like
+    'mcp-unstated' — 'ruleset vmcp-unstated' reads as noise."""
+    return f"v{v}" if str(v)[:1].isdigit() else str(v)
+
+
 def _bundle_versions():
     """Read the skill version (ada/VERSION) and ruleset version
     (ada/validations.yaml) that ship alongside these scripts. Recorded at init so
@@ -88,16 +94,50 @@ def _append(path, action, target, payload, actor="operator"):
 def cmd_init(a):
     if os.path.exists(a.ledger) and _entries(a.ledger):
         sys.exit(f"refuse: ledger already exists and is non-empty: {a.ledger}")
+    # A live run recorded "bundled / 1" — the small integer is `ruleset_version`
+    # from the policy manifest, not `policy_version`. Both are numbers on the
+    # same JSON object, so the confusion is the expected mistake rather than a
+    # careless one. Refuse it: this field is the audit answer to "which rules
+    # screened this package?", and a wrong value there reads as a fact.
+    if a.policy_source == "mcp" and a.policy_version.strip().isdigit():
+        sys.exit(
+            f"refuse: --policy-version {a.policy_version!r} looks like "
+            f"ruleset_version, not policy_version.\n"
+            f"  Pass the `policy_version` field of policy://manifest verbatim "
+            f"(e.g. 2026-08-06-7cd457f).\n"
+            f"  If the service genuinely publishes a numeric policy_version, "
+            f"prefix it — e.g. v{a.policy_version.strip()}.")
+
     sv, rv = _bundle_versions()
     sv = a.skill_version or sv or "unknown"
-    rv = a.ruleset_version or rv or "unknown"
+    # `ruleset_version` must name the rules that actually screened this run. On
+    # a served policy that is the service's ruleset, not the one bundled with
+    # these scripts — those numbers diverge the moment ADP publishes a rule the
+    # client has not reinstalled, which is the entire point of the service.
+    # Reading the local file would then record a plausible, wrong number.
+    if a.ruleset_version:
+        rv = a.ruleset_version
+    elif a.policy_source == "mcp":
+        rv = "mcp-unstated"
+        print("  NOTE: running on served policy without --ruleset-version; "
+              "recording 'mcp-unstated' rather than the bundled number, which "
+              "did not screen this run.", file=sys.stderr)
+    else:
+        rv = rv or "unknown"
+
     e = _append(
         a.ledger, "init", a.run_id,
         {"run_id": a.run_id, "client": a.client, "operator": a.operator,
-         "host": a.host, "skill_version": sv, "ruleset_version": rv},
+         "host": a.host, "skill_version": sv, "ruleset_version": rv,
+         # Which policy screened this run. Rules can change independently of
+         # the skill, so "bundled v1" and "mcp v7" are different claims about
+         # the same package — the manifest must be able to say which.
+         "policy_version": a.policy_version or "bundled",
+         "policy_source": a.policy_source},
     )
-    print(f"initialized run {a.run_id}  (skill v{sv} · ruleset v{rv})")
+    print(f"initialized run {a.run_id}  (skill v{sv} · ruleset {_vlabel(rv)})")
     print(f"  seq 0, hash {e['entry_hash'][:19]}…")
+    print(f"  policy: {a.policy_source} / {a.policy_version or 'bundled'}")
 
 
 def cmd_authorize(a):
@@ -290,7 +330,15 @@ def main():
     s.add_argument("--skill-version", default="",
                    help="override; default reads ada/VERSION")
     s.add_argument("--ruleset-version", default="",
-                   help="override; default reads validations.yaml")
+                   help="override; default reads validations.yaml. On served "
+                        "policy pass the service's ruleset_version — the "
+                        "bundled one did not screen the run")
+    s.add_argument("--policy-version", default="",
+                   help="policy_version from the ADP policy service manifest, "
+                        "or omit when running on the bundled policy")
+    s.add_argument("--policy-source", default="bundled",
+                   choices=["mcp", "bundled"],
+                   help="where the rules came from for this run")
 
     s = sub.add_parser("authorize"); s.set_defaults(fn=cmd_authorize)
     s.add_argument("--ledger", required=True)
