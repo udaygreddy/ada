@@ -206,6 +206,10 @@ def write_gap_report(path, manifest, staged):
         f"- Generated: {manifest['generated_at']}",
         f"- **{headline}** ({c['gaps']} gaps)",
         f"- Ledger integrity: {'✅ verified' if manifest['ledger_verified'] else '❌'}",
+        # Rules can change independently of the skill, so the package has to
+        # state which ruleset screened it — otherwise a verdict is unauditable.
+        f"- Screened by policy: {run.get('policy_source', 'bundled')} /"
+        f" {run.get('policy_version', 'bundled')}",
         "",
         "## ✅ Collected",
     ]

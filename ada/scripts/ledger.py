@@ -65,9 +65,16 @@ def cmd_init(a):
         sys.exit(f"refuse: ledger already exists and is non-empty: {a.ledger}")
     e = _append(
         a.ledger, "init", a.run_id,
-        {"run_id": a.run_id, "client": a.client, "operator": a.operator, "host": a.host},
+        {"run_id": a.run_id, "client": a.client, "operator": a.operator,
+         "host": a.host,
+         # Which policy screened this run. Rules can now change independently of
+         # the skill, so "bundled v1" and "mcp v7" are different claims about
+         # the same package — the manifest must be able to say which.
+         "policy_version": a.policy_version or "bundled",
+         "policy_source": a.policy_source},
     )
     print(f"initialized run {a.run_id} (seq 0, hash {e['entry_hash'][:19]}…)")
+    print(f"  policy: {a.policy_source} / {a.policy_version or 'bundled'}")
 
 
 def cmd_authorize(a):
@@ -257,6 +264,12 @@ def main():
     s.add_argument("--client", required=True)
     s.add_argument("--operator", required=True)
     s.add_argument("--host", required=True)
+    s.add_argument("--policy-version", default="",
+                   help="policy_version from the ADP policy service manifest, "
+                        "or omit when running on the bundled policy")
+    s.add_argument("--policy-source", default="bundled",
+                   choices=["mcp", "bundled"],
+                   help="where the rules came from for this run")
 
     s = sub.add_parser("authorize"); s.set_defaults(fn=cmd_authorize)
     s.add_argument("--ledger", required=True)
