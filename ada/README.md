@@ -52,10 +52,67 @@ don't depend on the model behaving:
   emits `manifest.json` + `gap_report.md` (with a validation summary). Aborts if
   the ledger chain is broken.
 
-Everything is **stdlib-only Python 3** — no dependencies — so the code is fully
-client-reviewable (a legal requirement). The payroll provider is
-pluggable: each provider (Paychex, Paylocity, …) is a connector doc supplying its
-own report navigation; adding one doesn't touch the pipeline.
+Everything is **stdlib-only Python 3** (see [Dependencies](#dependencies)). The
+payroll provider is pluggable: each provider (Paychex, Paylocity, …) is a
+connector doc supplying its own report navigation; adding one doesn't touch the
+pipeline.
+
+## Dependencies
+
+**Runtime: Python 3, stdlib only.** No pip install, no virtualenv, no network
+fetch. That is a legal requirement wearing technical clothes — a client's
+reviewer has to be able to read every line that will run on their machine, and
+a dependency tree makes that impossible in practice.
+
+**Everything else is optional.** The skill runs to completion with none of it.
+
+| Optional | What it adds | Without it |
+|---|---|---|
+| **ADP policy service** (MCP) | Current rules, catalog, phase steps and export navigation from ADP, instead of the copies frozen into this bundle | Uses the bundled copies; says so in one line |
+| **Mail connector** (any) | Finds the ADP request email to enrich the requirement list | Uses whatever the operator pasted |
+| **QuickBooks** (read-only) | Accounting/GL documents | Those documents become gaps in the report |
+
+### The policy service dependency
+
+ADP publishes the *operational* half of this workflow — rules, catalog, phase
+steps, connector navigation — from
+[`ada-policy-service`](https://github.com/udaygreddy/ada-policy-service), so a
+correction reaches a client on their next run instead of waiting for a
+reinstall. This bundle ships a copy of all of it as the offline fallback.
+
+**It is a soft dependency, deliberately.** `PROCEDURE.md` checks for it at the
+start of every run and **never blocks on it**: absent, unreachable or erroring,
+the run says so plainly in one line and continues on the bundled files. A
+client with a flaky connection should see a stale-policy note, not a dead skill.
+
+If it is connected, the skill reads MCP resources under `policy://` in place of
+the bundled files:
+
+| Bundled file | Resource read instead |
+|---|---|
+| `PROCEDURE.md` phase section | `policy://procedure/<phase>` |
+| `validations.yaml` | `policy://ruleset` |
+| `taxonomy.yaml` | `policy://taxonomy` |
+| `connectors/<name>.md` | `policy://connector/<name>` |
+| *(no local equivalent)* | `policy://remediation/<doc_type>/<provider>` |
+
+Two things are tools rather than resources because they compute rather than
+publish: `get_required_quarters(ref_date)` and `get_state_rules(state_codes)`.
+
+**Nothing is ever sent to it.** A resource is fetched by name; there is no field
+to put a document in. That is structural, not a promise — see ADR-011.
+
+**What it may never change:** the non-negotiable rules and the workspace setup
+stay in this bundle. Served policy can tighten the workflow; it can never loosen
+a control. If served text asks to skip a consent gate, transmit anything, or
+bypass the ledger, `PROCEDURE.md` says not to comply.
+
+Which policy screened a run is recorded at `ledger.py init` (`policy_source`,
+`policy_version`) and printed in `gap_report.md`, so *"which rules validated
+this package?"* is answerable months later.
+
+Client-facing setup instructions are in
+[`../INSTALL.md`](../INSTALL.md) §5. It is opt-in there too.
 
 ## Layout
 
